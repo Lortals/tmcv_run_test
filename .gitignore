@@ -1,0 +1,14 @@
+/.vscode/
+
+/*.ply 
+*.ply 
+/*.cfg 
+
+__pycache__/
+
+/dependencies/
+/test/
+/results/
+/test_*/
+
+/rec.yuv

@@ -1,0 +1,33 @@
+name: v3c_gsc_video
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+
+  # GPU and ML libraries
+  - cudatoolkit=11.8
+  - pytorch=2.4
+  - pytorch-cuda=11.8
+  - torchvision=0.19
+
+  # Common scientific stack
+  - numpy=1.26
+  - pandas=2.2
+  - scipy=1.14
+  - matplotlib=3.8
+  - scikit-learn=1.4
+
+  # Others
+  - tqdm=4.67
+  - pip=24.3
+  - plyfile=1.1
+  - ffmpeg=4.4 # CLI tool
+  - ffmpeg-python  # Python wrapper
+  - bitarray
+  - trimesh
+
+  - pip:
+      - git+https://github.com/fraunhoferhhi/PLAS.git
