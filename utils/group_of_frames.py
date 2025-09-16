@@ -536,7 +536,7 @@ class GroupOfFrames:
     v3c_unit = ssvu.add_v3c_unit(V3CUnitType.V3C_VPS) 
     v3c_unit.write_header()
     vps = V3cParameterSet()
-    vps.write( v3c_unit.bitstream, gof=self )
+    vps.write( v3c_unit.bitstream, gof=self, use_sei=True )
     self.stat.add_size( "VPS", v3c_unit.bitstream.get_size_bits() )    
     
     ##################
