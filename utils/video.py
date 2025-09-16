@@ -48,6 +48,7 @@ class Video:
     self.height = height
     self.format = format
     self.bits   = bits
+    median_value = 1 << (bits - 1)
     for f in range(num_frames):
       type = np.uint8 if self.bits <= 8 else np.uint16 if self.bits <= 16 else np.float32
       if self.format == '400':
@@ -56,12 +57,12 @@ class Video:
         V = None
       elif self.format == '420':
         Y = np.zeros(( self.height, self.width, ), dtype=type)
-        U = np.zeros((self.height // 2, self.width // 2), dtype=type)
-        V = np.zeros((self.height // 2, self.width // 2), dtype=type)
+        U = np.full((self.height, self.width), median_value, dtype=type)
+        V = np.full((self.height, self.width), median_value, dtype=type)
       elif self.format == '444':
         Y = np.zeros((self.height, self.width), dtype=type)
-        U = np.zeros((self.height, self.width), dtype=type)
-        V = np.zeros((self.height, self.width), dtype=type)
+        U = np.full((self.height, self.width), median_value, dtype=type)
+        V = np.full((self.height, self.width), median_value, dtype=type)
       else:
         raise ValueError(f"Unsupported video format: {self.format}")
       self.frames.append((Y, U, V))
@@ -100,9 +101,10 @@ class Video:
       U = None
       V = None
     elif self.format == '420':
+      # 444 and 420 us the same logic initially
       Y = np.zeros((self.height, self.width), dtype=dtype)
-      U = np.zeros((self.height // 2, self.width // 2), dtype=dtype)
-      V = np.zeros((self.height // 2, self.width // 2), dtype=dtype)
+      U = np.zeros((self.height, self.width), dtype=dtype)
+      V = np.zeros((self.height, self.width), dtype=dtype)
     elif self.format == '444':
       Y = np.zeros((self.height, self.width), dtype=dtype)
       U = np.zeros((self.height, self.width), dtype=dtype)
@@ -114,17 +116,19 @@ class Video:
   #######################################################################################################
 
   def pack_plane(self, data, f, x, y, c, verbose=False):
+    if verbose:
+      print("Packing plane: f = %d, x = %d, y = %d, c = %d, format = %s shape = %s " % (f, x, y, c, self.format, str(data.shape)))
     if self.num_frames() == 0:
       raise ValueError("Video has no frames")
     Y, U, V = self.frames[f]
     h0, w0 = data.shape
     if y + h0 > self.height or x + w0 > self.width:
-      raise ValueError("c0 out of bounds")
+      raise ValueError("Packing region out of bounds  y + h0 = %d > height = %d or x + w0 = %d > width = %d" % (y + h0, self.height, x + w0, self.width))
     if c == 0:
       Y[y:y+h0, x:x+w0] = data
-    elif c == 1 and self.format == '444':
+    elif c == 1 and self.format != '400':
       U[y:y+h0, x:x+w0] = data
-    elif c == 2 and self.format == '444':
+    elif c == 2 and self.format != '400':
       V[y:y+h0, x:x+w0] = data
     else:
       raise ValueError(f"Unsupported format {self.format}")
@@ -233,12 +237,13 @@ class Video:
 
   def convert_400_to_420(self):
     if self.format != '400':
-      raise ValueError("convert_400_to_420() can only be called on videos with format '400'")
+      raise ValueError("convert_400_to_420() can only be called on videos with format '400'")      
+    median_value = 1 << (self.bits - 1)
     type = np.uint8 if self.bits <= 8 else np.uint16 if self.bits <= 16 else np.float32
     new_frames = []
     for (Y, _, _) in self.frames:
-      U = np.zeros((self.height // 2, self.width // 2), dtype=type)
-      V = np.zeros((self.height // 2, self.width // 2), dtype=type)
+      U = np.full((self.height // 2, self.width // 2), median_value,  dtype=type)
+      V = np.full((self.height // 2, self.width // 2), median_value,  dtype=type)
       new_frames.append((Y.copy(), U, V))
     self.frames = new_frames
     self.format = '420'
@@ -376,17 +381,19 @@ class Video:
     size = self.width * self.height * (1 if self.bits <= 8 else 2)
     type = np.uint8 if self.bits <= 8 else np.uint16
     if self.format == '400':
-      Y = np.frombuffer(data, dtype=type).reshape((self.height, self.width))
+      # copy() is needed to modify the frame in yuv2rgb
+      Y = np.frombuffer(data, dtype=type).reshape((self.height, self.width)).copy()
       return (Y, None, None)
     elif self.format == '420':
-      Y = np.frombuffer(data[:size], dtype=type).reshape((self.height, self.width))
-      U = np.frombuffer(data[size:size * 5 // 4], dtype=type).reshape((self.height // 2, self.width // 2))
-      V = np.frombuffer(data[size * 5 // 4:], dtype=type).reshape((self.height // 2, self.width // 2))
+      Y = np.frombuffer(data[:size], dtype=type).reshape((self.height, self.width)).copy()
+      chroma_size = size // 4  # U and V are each 1/4 the size of Y
+      U = np.frombuffer(data[size:size + chroma_size], dtype=type).reshape((self.height // 2, self.width // 2)).copy()
+      V = np.frombuffer(data[size + chroma_size:size + 2 * chroma_size], dtype=type).reshape((self.height // 2, self.width // 2)).copy()
       return (Y, U, V)
     elif self.format == '444':
-      Y = np.frombuffer(data[:size], dtype=type).reshape((self.height, self.width))
-      U = np.frombuffer(data[size:size * 2], dtype=type).reshape((self.height, self.width))
-      V = np.frombuffer(data[size * 2:], dtype=type).reshape((self.height, self.width))
+      Y = np.frombuffer(data[:size], dtype=type).reshape((self.height, self.width)).copy()
+      U = np.frombuffer(data[size:size * 2], dtype=type).reshape((self.height, self.width)).copy()
+      V = np.frombuffer(data[size * 2:], dtype=type).reshape((self.height, self.width)).copy()
       return (Y, U, V)
 
   #######################################################################################################

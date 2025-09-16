@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import signal
 import platform
@@ -187,5 +188,33 @@ def min_num_gaussian_in_gof(path, first_frame=0, num_frames=1, verbose=False):
   if verbose:
     print(f"Minimum number of points in GoF: %9d " % num_points, flush=True)
   return num_points
+
+#######################################################################################################
+
+def normalize_path(path: str) -> str:
+    m = re.match(r"([A-Za-z]):\\(.*)", path)
+    if m:
+        drive = m.group(1).lower()
+        rest = m.group(2).replace("\\", "/")
+        return f"/{drive}/{rest}"
+    return path.replace("\\", "/")
+
+#######################################################################################################
+
+def reformat(line: str) -> str:
+    parts = line.strip()[:].strip().split()
+    if not parts:
+        return line
+    exe = normalize_path(parts[0])
+    args = []
+    for p in parts[1:]:
+        if p.startswith("--") or p.startswith("-"):
+            args.append(" \\\n        " + p)   
+        else:
+            if args:
+                args[-1] += f" {normalize_path(p)}"
+            else:
+                args.append(normalize_path(p))
+    return exe + " " + "".join(args)
 
 #######################################################################################################

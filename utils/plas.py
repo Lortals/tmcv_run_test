@@ -54,6 +54,8 @@ def prepare_tensor(pointcloud,
                    trans_position,
                    device,
                    verbose=False):
+  if verbose:
+    print(f"Preparing tensor m73254 with parameters: {param_list}")
   tensors = []
   for param in param_list:
     if param in ['x', 'y', 'z']:
@@ -72,7 +74,7 @@ def prepare_tensor(pointcloud,
       norm_values = linear_normalize( values, bitdepth_rotate)
     elif param.startswith('f_dc'):
       dc_vals = pointcloud.df.loc[:, pointcloud.df.columns.str.startswith("f_dc")].values
-      norm_values = linear_normalize( values, bitdepth_dc)
+      norm_values = linear_normalize( dc_vals, bitdepth_dc)
       # norm_values = np.clip(dc_vals * C0 + 0.5, 0, 1) * coords_scale_dc  # C0  = 0.28209479177387814 
     elif param.startswith('f_rest'):
       values = pointcloud.df[[param]].values
@@ -115,7 +117,7 @@ def sort( pointcloud,
   sorted_coords, sorted_grid_indices = sort_with_plas(params_torch_grid, 
                                                       min_block_size,
                                                       improvement_break=1e-4, 
-                                                      verbose=verbose)
+                                                      verbose=False)
   sorted_indices = sorted_grid_indices.flatten().cpu().numpy()
   pointcloud.df = pointcloud.df.iloc[sorted_indices]
 

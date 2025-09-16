@@ -36,7 +36,126 @@ then
   cmake --build ${HMDIR}/build --config Release --parallel ${NUMBER_OF_PROCESSORS}
   if [ $( uname ) == "Linux" ]; then chmod 755 ${HMENC} ${HMDEC}; fi
 else
-  echo "${HMBIN} already exist"
+  echo "${HMENC} already exist"
+fi
+
+################################################################################# 
+# HM-18.0 DQP
+################################################################################# 
+echo -e "\033[0;32mBuild HM-18.0 Dqp \033[0m"
+HMDIR=${DEPDIR}/HM-18.0-Dqp
+if [ $( uname ) == "Linux" ]
+then
+  HMDQPENC=${HMDIR}/bin/TAppEncoderStatic
+  HMDEC=${HMDIR}/bin/TAppDecoderStatic
+else
+  HMDQPENC=${HMDIR}/bin/vs16/msvc-19.29/x86_64/release/TAppEncoder.exe  
+  HMDQPDEC=${HMDIR}/bin/vs16/msvc-19.29/x86_64/release/TAppDecoder.exe  
+fi 
+
+# Clone 
+if [ ! -d ${HMDIR} ]
+then 
+  echo "ERROR: ${HMDIR} not exists"
+  exit 1
+fi 
+
+# Build HM with 
+if [ ! -f ${HMENC} ]
+then 
+  mkdir ${HMDIR}/build   
+  cmake -H${HMDIR} -B${HMDIR}/build -DHIGH_BITDEPTH=OFF
+  cmake --build ${HMDIR}/build --config Release --parallel ${NUMBER_OF_PROCESSORS}
+  if [ $( uname ) == "Linux" ]; then chmod 755 ${HMENC} ${HMDEC}; fi
+else
+  echo "${HMENC} already exist"
+fi
+
+################################################################################# 
+# HM-18.0 Rext
+################################################################################# 
+echo -e "\033[0;32mBuild HM-18.0 Rext \033[0m"
+HMDIR=${DEPDIR}/HM-18.0-Rext
+if [ $( uname ) == "Linux" ]
+then
+  HMREXTENC=${HMDIR}/bin/TAppEncoderStatic
+  HMREXTDEC=${HMDIR}/bin/TAppDecoderStatic
+else
+  HMREXTENC=${HMDIR}/bin/vs16/msvc-19.29/x86_64/release/TAppEncoder.exe  
+  HMREXTDEC=${HMDIR}/bin/vs16/msvc-19.29/x86_64/release/TAppDecoder.exe  
+fi 
+
+# Clone 
+if [ ! -d ${HMDIR} ]
+then 
+  git clone https://vcgit.hhi.fraunhofer.de/jvet/HM.git -b HM-18.0 ${HMDIR}
+else 
+  echo "${HMDIR} already exist"
+fi 
+
+# Update iAdd
+#   from: const Intermediate_Int iAdd = 1 << (rightShift - 1);
+#   to:   const Intermediate_Int iAdd = (Intermediate_Int(1)) << (rightShift - 1);
+FILE=${HMDIR}/source/Lib/TLibCommon/TComTrQuant.cpp
+if grep -q "const Intermediate_Int iAdd = (Intermediate_Int(1)) << (rightShift - 1);" "${FILE}"; then
+  echo "${FILE} already patched: $(grep "const Intermediate_Int iAdd" "${FILE}")"
+else
+  echo "${FILE} not patched. running sed command..."
+  sed -i 's/const Intermediate_Int iAdd = 1 << (rightShift - 1);/const Intermediate_Int iAdd = (Intermediate_Int(1)) << (rightShift - 1);/' "${FILE}"
+  if grep -q "const Intermediate_Int iAdd = (Intermediate_Int(1)) << (rightShift - 1);" "${FILE}"; then
+    echo "${FILE} correctly patched: $(grep "const Intermediate_Int iAdd" "${FILE}")"
+  else
+    echo "Error: sed command failed"
+    echo "Please edit ${FILE} manually"
+    exit 1
+  fi
+fi
+
+# Update TCoeff
+#   from: const TCoeff offset = 1 << (iTransformShift - 1);
+#   to:   const TCoeff offset = (Intermediate_Int(1)) << (iTransformShift - 1);
+FILE=${HMDIR}/source/Lib/TLibCommon/TComTrQuant.cpp
+if grep -q "const TCoeff offset = (Intermediate_Int(1)) << (iTransformShift - 1);" "${FILE}"; then
+  echo "${FILE} already patched: $(grep "const Intermediate_Int iAdd" "${FILE}")"
+else
+  echo "${FILE} not patched. running sed command..."
+  sed -i 's/const TCoeff offset = 1 << (iTransformShift - 1);/const TCoeff offset = (Intermediate_Int(1)) << (iTransformShift - 1);/' "${FILE}"
+  if grep -q "const TCoeff offset = (Intermediate_Int(1)) << (iTransformShift - 1);" "${FILE}"; then
+    echo "${FILE} correctly patched: $(grep "const Intermediate_Int iAdd" "${FILE}")"
+  else
+    echo "Error: sed command failed"
+    echo "Please edit ${FILE} manually"
+    exit 1
+  fi
+fi
+
+# Update iAdd
+#   from: const Intermediate_Int iAdd      = 1 << (rightShift - 1);
+#   to:   const Intermediate_Int iAdd      = (Intermediate_Int(1)) << (rightShift - 1); 
+FILE=${HMDIR}/source/Lib/TLibCommon/TComTrQuant.cpp
+if grep -q "const Intermediate_Int iAdd       = (Intermediate_Int(1)) << (rightShift - 1);" "${FILE}"; then
+  echo "${FILE} already patched: $(grep "const Intermediate_Int iAdd" "${FILE}")"
+else
+  echo "${FILE} not patched. running sed command..."
+  sed -i 's/const Intermediate_Int iAdd      = 1 << (rightShift - 1);/const Intermediate_Int iAdd      = (Intermediate_Int(1)) << (rightShift - 1);/' "${FILE}"
+  if grep -q "const Intermediate_Int iAdd      = (Intermediate_Int(1)) << (rightShift - 1);" "${FILE}"; then
+    echo "${FILE} correctly patched: $(grep "const Intermediate_Int iAdd" "${FILE}")"
+  else
+    echo "Error: sed command failed"
+    echo "Please edit ${FILE} manually"
+    exit 1
+  fi
+fi
+
+# Build HM with HIGH_BITDEPTH for 12 bits depth
+if [ ! -f ${HMREXTENC} ]
+then 
+  mkdir ${HMDIR}/build   
+  cmake -H${HMDIR} -B${HMDIR}/build -DHIGH_BITDEPTH=ON
+  cmake --build ${HMDIR}/build --config Release --parallel ${NUMBER_OF_PROCESSORS}
+  if [ $( uname ) == "Linux" ]; then chmod 755 ${HMREXTENC} ${HMREXTDEC}; fi
+else
+  echo "${HMREXTENC} already exist"
 fi
 
 ################################################################################# 
@@ -171,6 +290,10 @@ fi
 
 echo "HM       ENCODER BINARY PATH = ${HMENC}"
 echo "HM       DECODER BINARY PATH = ${HMDEC}"
+echo "HM-Dqp   ENCODER BINARY PATH = ${HMDQPENC}"
+echo "HM-Dqp   DECODER BINARY PATH = ${HMDQPDEC}"
+echo "HM-Rext  ENCODER BINARY PATH = ${HMREXTENC}"
+echo "HM-Rext  DECODER BINARY PATH = ${HMREXTDEC}"
 echo "VTM      ENCODER BINARY PATH = ${VTMENC}"
 echo "VTM      DECODER BINARY PATH = ${VTMDEC}"
 echo "VTM-Rext ENCODER BINARY PATH = ${VTMREXTENC}"
@@ -183,6 +306,14 @@ cat > "$JSON_FILE" <<EOF
   "hm": {
     "encoder": "${HMENC}",
     "decoder": "${HMDEC}"
+  },
+  "hmd": {
+    "encoder": "${HMDQPENC}",
+    "decoder": "${HMDQPDEC}"
+  },
+  "hmr": {
+    "encoder": "${HMREXTENC}",
+    "decoder": "${HMREXTDEC}"
   },
   "vtm": {
     "encoder": "${VTMENC}",

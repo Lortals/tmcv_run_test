@@ -5,12 +5,15 @@ MAINDIR=$( dirname ${CURDIR} )
 echo -e "\033[0;32m$0: ${MAINDIR} \033[0m"
 
 # Parameters
-OUTDIR=$( dirname ${MAINDIR} )/test_float
+OUTDIR=$( dirname ${MAINDIR} )/test_float_new
 SRCPLY=/g/gs/mpeg_20250707/m71763_bartender_stable/track_pos/frame%03d_pos.ply
 RENDERPATH=$(dirname ${MAINDIR} )/mpeg-3d-renderer/bin/windows/Release/PccAppRenderer.exe
+METRICPATH=$(dirname ${MAINDIR} )/mpeg-gsc-metrics/build/Release/bin/Release/mpeg-gsc-metrics.exe
+NUMFRAMES=1
 
 # Check
 if [ ! -f ${RENDERPATH} ] ; then echo "${RENDERPATH} not exists"; exit -1; fi
+if [ ! -f ${METRICPATH} ] ; then echo "${METRICPATH} not exists"; exit -1; fi
 
 # Functions
 function formatCmd() {
@@ -35,6 +38,7 @@ do
   if [ ! -d ${TESTDIR} ] ; then mkdir -p  ${TESTDIR}; fi
   LOGENC="${TESTDIR}/${TEST}_enc.log"
   LOGDEC="${TESTDIR}/${TEST}_dec.log"
+  LOGMET="${TESTDIR}/${TEST}_met.log"
 
   # Encode
   if [ ! -f "${LOGENC}" ] || ! tail -n 1 "${LOGENC}" | grep -q "^Time:" 
@@ -45,7 +49,7 @@ do
       -i ${SRCPLY} \
       -b ${TESTDIR}/test.v3c \
       -r ${TESTDIR}/test_rec_%04d.ply \
-      -n 1 \
+      -n ${NUMFRAMES} \
       -v "
     formatCmd "$CMD" "-- -c -i -b -r -d -n -v  >" | tee -a "$LOGENC"
     eval "$CMD" 2>&1 | tee -a "$LOGENC"
@@ -79,7 +83,33 @@ do
   # ${RENDERPATH} \
   #   -f ${TESTDIR}/test_dec_0000.ply \
   #   -g 1 \
+  #   -n ${NUMFRAMES} \
   #   --SrcFile=${SRCPLY} 
+
+  # Metrics   
+  if [ ! -f "${LOGMET}" ] || ! tail -n 1 "${LOGDEC}" | grep -q "^Time:" 
+  then
+    echo -e "\033[0;32m$TEST metric \033[0m"
+    CMD="${METRICPATH} \
+      -a ${SRCPLY} \
+      -b ${TESTDIR}/test_dec_%04d.ply \
+      --width=1920 \
+      --height=1080 \
+      --useCameraPosition=1 \
+      --cpu=0 \
+      -f ${NUMFRAMES} \
+      -s 1 \
+      -v 1 \
+      -o ${TESTDIR}/metrics.log"
+    formatCmd "$CMD" "-- -a -b -f -s -o -v  >" | tee -a "$LOGMET"
+    eval "$CMD" 2>&1 | tee -a "$LOGMET"
+    if [ "${PIPESTATUS[0]}" != 0 ]; then
+      echo "Metric failed" | tee -a "$LOGMET"
+      exit 1
+    fi
+  else
+    echo "  ${LOGMET} already exists"
+  fi
 
   IDX=$(( IDX + 1)) 
 done

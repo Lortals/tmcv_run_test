@@ -10,7 +10,8 @@ if shutil.which("ffmpeg") is None:
     print("FFmpeg is not found please update path.")
     exit(1)
 
-from utils.common import write_bin, read_bin, create_yuv_filename, remove_extension, to_bash_path, fixpath, is_windows
+from utils.common import write_bin, read_bin, create_yuv_filename, remove_extension, to_bash_path, fixpath, is_windows, reformat
+from utils.v3c.type import Format 
 
 #######################################################################################################
 
@@ -35,11 +36,11 @@ def get_binary_path(codec, mode ):
 
 #######################################################################################################
 
-def encode_video( type, name, index, output_dir, video, codec, config, qp, verbose=False): 
+def encode_video( type, name, index, output_dir, video, codec, config, qp, dqp, verbose=False): 
   if codec == 'x264' or codec == 'x265':
     bin = encode_ffmpeg(name=name, index=index, output_dir=output_dir, video=video, codec=codec, config=config, qp=qp, verbose=verbose)
-  elif codec == 'hm':
-    bin = encode_hm(name=name, index=index, output_dir=output_dir, video=video, codec=codec, config=config, qp=qp, verbose=verbose)
+  elif codec == 'hm' or codec == 'hmr' or codec == 'hmd':
+    bin = encode_hm(name=name, index=index, output_dir=output_dir, video=video, codec=codec, config=config, qp=qp, dqp=dqp, verbose=verbose)
   elif codec == 'vtm' or codec == 'vtr':
     bin = encode_vtm(name=name, index=index, output_dir=output_dir, video=video, codec=codec, config=config, qp=qp, verbose=verbose)
   else:
@@ -48,16 +49,16 @@ def encode_video( type, name, index, output_dir, video, codec, config, qp, verbo
 
 #######################################################################################################
 
-def decode_video(name, index, output_dir, bitstream, width, height, fps, bits, num_comp, video, codec, verbose=False):
+def decode_video(name, index, output_dir, bitstream, width, height, fps, bits, format, video, codec, verbose=False):
   if codec == 'x264' or codec == 'x265':
     decode_ffmpeg(name=name, index=index, output_dir=output_dir, bitstream=bitstream, width=width, height=height, 
-                  fps=fps, bits=bits, num_comp=num_comp, video=video, codec=codec, verbose=verbose)
-  elif codec == 'hm':
+                  fps=fps, bits=bits, format=format, video=video, codec=codec, verbose=verbose)
+  elif codec == 'hm' or codec == 'hmr' or codec == 'hmd':
     decode_hm(name=name, index=index, output_dir=output_dir, bitstream=bitstream, width=width, height=height, 
-              fps=fps, bits=bits, num_comp=num_comp, video=video, codec=codec, verbose=verbose)
+              fps=fps, bits=bits, format=format, video=video, codec=codec, verbose=verbose)
   elif codec == 'vtm' or codec == 'vtr':
     decode_vtm(name=name, index=index, output_dir=output_dir, bitstream=bitstream, width=width, height=height, 
-               fps=fps, bits=bits, num_comp=num_comp, video=video, codec=codec, verbose=verbose)
+               fps=fps, bits=bits, format=format, video=video, codec=codec, verbose=verbose)
   else:
     raise ValueError(f"encode function not support codec: {codec}")
         
@@ -65,7 +66,7 @@ def decode_video(name, index, output_dir, bitstream, width, height, fps, bits, n
 ###################################### HM #############################################################
 #######################################################################################################
 
-def encode_hm(name, index, output_dir, video, codec, config, qp, verbose=False):   
+def encode_hm(name, index, output_dir, video, codec, config, qp, dqp, verbose=False):   
   path   = get_binary_path(codec, 'encoder' )
   name   = "%02d_%s_enc" % (index, name)
   if video.format == '400':
@@ -86,7 +87,7 @@ def encode_hm(name, index, output_dir, video, codec, config, qp, verbose=False):
     '--BitstreamFile='         + output,
     '--InputChromaFormat='     + video.format, 
     '--FramesToBeEncoded='     + str( video.num_frames() ),
-    '--FrameRate=10',   
+    '--FrameRate=30',   
     '--SourceWidth='           + str( video.width ),
     '--SourceHeight='          + str( video.height ),
     '--InputBitDepth='         + str( max( video.bits, 8 ) ),
@@ -96,11 +97,15 @@ def encode_hm(name, index, output_dir, video, codec, config, qp, verbose=False):
     '--QP='                    + str( qp ),
     '--ReconFile='             + 'NUL' if platform.system() == 'Windows' else '/dev/null',
     '--ExtendedPrecision=0',
-    '--IntraReferenceSmoothing=1'
+    '--IntraReferenceSmoothing=1',
+    '--SEIDecodedPictureHash=1'
   ]  
+  print(f"dqp file = {dqp}")
+  if os.path.exists(dqp):
+      cmd.append('--dQPFile=' + to_bash_path(dqp))
   # cmd.append(  '--ReconFile=' + recName )  
   if verbose:
-    print( ' '.join( cmd ) )    
+    print( reformat(  ' '.join( cmd ) )  )
   with open(log_path, 'w', encoding='utf-8') as logfile:
     result = subprocess.run(cmd, stdout=logfile, stderr=subprocess.STDOUT, text=True)
   if verbose:
@@ -112,12 +117,11 @@ def encode_hm(name, index, output_dir, video, codec, config, qp, verbose=False):
 
 #######################################################################################################
 
-def decode_hm(name, index, output_dir, bitstream, width, height, fps, bits, num_comp, video, codec, verbose=False):
+def decode_hm(name, index, output_dir, bitstream, width, height, fps, bits, format, video, codec, verbose=False):
   path   = get_binary_path(codec, 'decoder' )
   name   = "%02d_%s_dec" % (index, name)
   input  = to_bash_path( os.path.join( output_dir, name + '.hm' ))
-  output = to_bash_path( os.path.join(output_dir, create_yuv_filename(name, "", width, height, fps, bits, 
-                                                                      "420" if num_comp == 1 else "444") ) )  
+  output = to_bash_path( os.path.join(output_dir, create_yuv_filename(name, "", width, height, fps, bits, "444" if format == Format.YUV444 else "420") ) )
   log_path = os.path.join(output_dir, name + '.log')
   write_bin( input, bitstream )
   cmd = [
@@ -136,7 +140,7 @@ def decode_hm(name, index, output_dir, bitstream, width, height, fps, bits, num_
       for line in logfile:
         print(line.rstrip())
   video.read( output, verbose )
-  if num_comp == 1:
+  if format == Format.YUV400:
     video.convert_420_to_400()    
   if verbose:
     print(f"DEC HM    : decoded: {input} in {output}")
@@ -190,12 +194,11 @@ def encode_vtm(name, index, output_dir, video, codec, config, qp, verbose=False)
 
 #######################################################################################################
 
-def decode_vtm(name, index, output_dir, bitstream, width, height, fps, bits, num_comp, video, codec, verbose=False):
+def decode_vtm(name, index, output_dir, bitstream, width, height, fps, bits, format, video, codec, verbose=False):
     path   = get_binary_path(codec, 'decoder' )
     name   = "%02d_%s_dec" % (index, name)
     input  = to_bash_path( os.path.join( output_dir, name + '.vtm' ))
-    output = to_bash_path( os.path.join(output_dir, create_yuv_filename(name, "", width, height, fps, bits, 
-                                                                        "420" if num_comp == 1 else "444") ) )
+    output = to_bash_path( os.path.join(output_dir, create_yuv_filename(name, "", width, height, fps, bits, "444" if format == Format.YUV444 else "420")) ) 
     log_path = os.path.join(output_dir, name + '.log')
     write_bin( input, bitstream )
     cmd = [
@@ -214,18 +217,18 @@ def decode_vtm(name, index, output_dir, bitstream, width, height, fps, bits, num
           print(line.rstrip())
       print(f"DEC VTM   : decoded: {input} in {output}")
     video.read( output, verbose )
-    if num_comp == 1:
+    if format == Format.YUV400:
         video.convert_420_to_400()
 
 #######################################################################################################
 ###################################### FFMPEG #########################################################
 #######################################################################################################
 
-def get_pix_fmt_ffmpeg( bits=0, num_comp=3 ):
-  formats = { 3:         { 8:  'yuv444p', 10: 'yuv444p10le', 12: 'yuv444p12le', 16: 'yuv444p16le', 'default': 'yuv444p16le' },
-              1:         { 8:  'gray8',   10: 'gray10le',    12: 'gray12le',    16: 'gray16le',    'default': 'gray16le'    },
-              'default': { 8:  'yuv420p', 10: 'yuv420p10le', 12: 'yuv420p12le', 16: 'yuv420p16le', 'default': 'yuv420p16le' } }  
-  fmt_group = formats.get(num_comp, formats['default'])
+def get_pix_fmt_ffmpeg( bits=0, format=Format.YUV420 ):
+  formats = { Format.YUV400: { 8:  'gray8',   10: 'gray10le',    12: 'gray12le',    16: 'gray16le',    'default': 'gray16le'    },
+              Format.YUV420: { 8:  'yuv420p', 10: 'yuv420p10le', 12: 'yuv420p12le', 16: 'yuv420p16le', 'default': 'yuv420p16le' },
+              Format.YUV444: { 8:  'yuv444p', 10: 'yuv444p10le', 12: 'yuv444p12le', 16: 'yuv444p16le', 'default': 'yuv444p16le' } }  
+  fmt_group = formats.get(format, formats[Format.YUV420])
   return fmt_group.get(bits, fmt_group['default'])
 
 #######################################################################################################
@@ -276,12 +279,13 @@ def encode_ffmpeg(name, index, output_dir, video, codec, config, qp, verbose=Fal
 
 #######################################################################################################
 
-def decode_ffmpeg(name, index, output_dir, bitstream, width, height, fps, bits, num_comp, video, codec, verbose=False):
+def decode_ffmpeg(name, index, output_dir, bitstream, width, height, fps, bits, format, video, codec, verbose=False):
   name  = "%02d_%s_dec" % (index, name)
   input = to_bash_path( os.path.join( output_dir, name + '.mp4' ))
   write_bin( input, bitstream )   
+  num_comp = 1 if format == '400' else 3  
   pix_fmt = get_pix_fmt_ffmpeg( bits, num_comp )
-  output  = to_bash_path( os.path.join(output_dir, create_yuv_filename( name, "", width, height, fps, bits, "400" if num_comp == 1 else "444"  ) ) )
+  output  = to_bash_path( os.path.join(output_dir, create_yuv_filename( name, "", width, height, fps, bits, format.video_name()  ) ) )
   try:
     (
       ffmpeg

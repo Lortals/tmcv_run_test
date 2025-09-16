@@ -5,52 +5,59 @@ from scipy.stats    import norm
 from scipy.optimize import minimize_scalar
 from utils.common   import log_transform, inverse_log_transform
 from utils.video    import Video
-from utils.v3c.type import V3CUnitType, Quantization, Format, Packing
+from utils.v3c.type import V3CUnitType, Quantization, Format, Packing, ColorStandard
 from scipy.stats    import norm
+import scipy.stats as stats
   
 #######################################################################################################
 
 class VideoData:
 
   def __init__( self, 
-                type            = V3CUnitType.NUM_V3C_UNIT_TYPE,
-                list_params     = [],
-                bitdepth        = 0,
-                qp              = 0, 
-                codec_id        = 0,
-                format          = Format.YUV444,
-                packing         = Packing.TEMPORAL,
-                quantization    = Quantization.LINEAR,
-                trans_position  = False,
-                verbose         = False):
+                type           = V3CUnitType.NUM_V3C_UNIT_TYPE,
+                list_params    = [],
+                bitdepth       = 0,
+                bitdepth_pos   = [0,0],
+                qp             = 0, 
+                codec_id       = 0,
+                format         = Format.YUV444,
+                packing        = Packing.TEMPORAL,
+                quantization   = Quantization.LINEAR,
+                trans_position = False,
+                sh_conversion  = ColorStandard.NONE,
+                subsampling    = 0,
+                verbose        = False):
     # V3C nalu unit type
-    self.type            = type 
-    # Video parameters
-    self.bitdepth        = bitdepth
-    self.qp              = qp
-    self.codec_id        = codec_id
-    self.list_params     = list_params
-    self.format          = format
-    self.packing         = packing 
+    self.type              = type 
+    # Video parameters  
+    self.bitdepth          = bitdepth
+    self.qp                = qp
+    self.codec_id          = codec_id
+    self.list_params       = list_params
+    self.format            = format
+    self.packing           = packing 
     # Transform parameters
-    self.trans_position = trans_position
+    self.bitdepth_pos      = bitdepth_pos
+    self.trans_position    = trans_position
+    self.sh_conversion     = sh_conversion
+    self.subsampling       = subsampling
     # Quantization parameters
-    self.quantization    = quantization
-    self.min             = [0] * 3
-    self.max             = [0] * 3
-    self.center          = [0] * 3
-    self.sigma           = [0] * 3
-    # Video data
-    self.width           = 0 
-    self.height          = 0
-    self.num_components  = 0
-    self.num_planes      = 0
-    self.video_src       = Video()
-    self.video_uint      = Video()
-    self.video_dec       = Video()
-    self.video_res       = Video()
-    # Bitstream
-    self.bitstream       = []
+    self.quantization      = quantization
+    self.min               = [0] * 3
+    self.max               = [0] * 3
+    self.center            = [0] * 3
+    self.sigma             = [0] * 3
+    # Video data  
+    self.width             = 0 
+    self.height            = 0
+    self.num_components    = 0
+    self.num_planes        = 0
+    self.video_src         = Video()
+    self.video_uint        = Video()
+    self.video_dec         = Video()
+    self.video_res         = Video()
+    # Bitstream  
+    self.bitstream         = []
     # Define grid size based on the number of parameters
     if self.packing == Packing.PLANAR:     
       self.grid_width, self.grid_height = self.__get_grid_size()      
@@ -118,7 +125,7 @@ class VideoData:
         raise ValueError(f"Unknown video type: {type}")
     result = 0
     if self.packing == Packing.TEMPORAL: 
-      if self.format == Format.YUV444: 
+      if self.format != Format.YUV400: 
         result = total_frames // ( num_params // 3 )
       else:
         result = total_frames // num_params
@@ -134,7 +141,7 @@ class VideoData:
       raise ValueError("Unknown video type: %s" % type)
     num_params = len(self.list_params)
     if self.packing == Packing.TEMPORAL:
-      if self.format == Format.YUV444:
+      if self.format != Format.YUV400:
         factor = (( num_params + 2 ) // 3)
       else:
         factor = num_params
@@ -186,7 +193,7 @@ class VideoData:
   #######################################################################################################
 
   def get_pack_position(self, position_index):
-    num_components = 3 if self.format == Format.YUV444 else 1
+    num_components = 1 if self.format == Format.YUV400 else 3
     blocks_per_frame = self.grid_width * self.grid_height * num_components
     if self.packing == Packing.TEMPORAL:
       f = position_index // blocks_per_frame
@@ -210,13 +217,14 @@ class VideoData:
     self.block_height   = pointcloud.sidelen  
     self.width          = self.block_width  * self.grid_width
     self.height         = self.block_height * self.grid_height   
-    self.num_components = 3 if self.format == Format.YUV444 else 1 
+    self.num_components = 1 if self.format == Format.YUV400 else 3
     num_frames          = -1
     if verbose:
       print("  Pack one frame:  %s %s %s, comp = %d, grid = %d x %d block = %dx %d frame = %d x %d " %( 
           self.type.name, self.format.name, self.packing.name, 
           self.num_components, self.grid_width, self.grid_height, 
           self.block_width, self.block_height, self.width, self.height)    )
+
     for i, id in enumerate(self.list_params if list_params is None else list_params):
       if id not in { 'zero', 'x_add', 'y_add', 'z_add' }:
         data = pointcloud.df[id].values.reshape(pointcloud.sidelen, pointcloud.sidelen, -1)
@@ -227,13 +235,16 @@ class VideoData:
         data = np.zeros((pointcloud.sidelen, pointcloud.sidelen), dtype=np.float32)
       f, x, y, c = self.get_pack_position(i)
       if f != num_frames:
-        self.video_src.add_empty_frame( self.width, self.height, bits=32, format="444" if self.format == Format.YUV444 else "400", verbose=verbose ) 
+        self.video_src.add_empty_frame( width=self.width,  height=self.height, bits=32, format=self.format.video_name(), verbose=verbose ) 
         num_frames = f
-      if verbose:
-        print("  %-10s: pack %-10s size = %4d x %4d, f = %3d pos = %4d %4d c = %2d bd = %2d " % (self.type.name, 
-              id, self.width, self.height, f, x, y, c, self.bitdepth) ) 
+      
       self.video_src.pack_plane(data=data, f=-1, x=x, y=y, c=c, verbose=verbose)
-
+      if verbose:
+        print("  pack %-10s size = %4d x %4d, f = %3d pos = %4d %4d c = %2d bd = %2d => pc = %20.12f => %20.12f" % (
+              id, self.width, self.height, f, x, y, c, self.bitdepth, 
+              data[0,0],
+              self.video_src.c(-1, c)[0,0]) ) 
+       
   #######################################################################################################
 
   def get_block(self, param_name: str, frame_index: int, type: str, verbose=False) -> np.ndarray:  
@@ -291,7 +302,7 @@ class VideoData:
           flat_data = inverse_log_transform(flat_data)
         pointcloud.df[param] = flat_data
         if verbose:
-          print("  Reconst: frame = %2d param = %-16s data = " % (frame_index, param), flat_data)
+          print("  Reconst: frame = %2d param = %-16s data = " % (frame_index, param), flat_data)          
 
   #######################################################################################################
   ###################################### Quantization ###################################################
@@ -324,11 +335,10 @@ class VideoData:
       print(f"Quantization (linear): packing = {self.packing.name}, type = {self.type.name}")
     self.min         = []
     self.max         = []
-    bit_max          = (2 ** self.bitdepth) - 1
     num_frames       = self.num_frames('src')
     num_frames_video = self.video_src.num_frames()
     num_blocks       = len(self.list_params)
-    self.video_uint.alloc(num_frames_video, self.width, self.height, self.bitdepth, "444" if self.format == Format.YUV444 else "400")
+    self.video_uint.alloc(num_frames_video, self.width, self.height, self.bitdepth, self.format.video_name() )
     for block_index in range(num_blocks):
       param = self.list_params[block_index]
       if param in ['zero', 'x_add', 'y_add', 'z_add']:
@@ -345,60 +355,68 @@ class VideoData:
       self.min.append(min_val)
       self.max.append(max_val)
       if verbose:
-        print(f"  Block {block_index:2d} '{param}': min = {min_val:.4f}, max = {max_val:.4f}")
+        print(f"  Block '{param}': min = {min_val:.4f}, max = {max_val:.4f}")
     for frame_index in range(num_frames):
       for block_index, param in enumerate(self.list_params):
-        block = self.get_block(param, frame_index, type='src', verbose=verbose)
-        min_val = self.min[block_index]
-        max_val = self.max[block_index]
-        if max_val - min_val < 1e-8:
-          normed = np.zeros_like(block)
-        else:
-          normed = (block - min_val) / (max_val - min_val)
-        quantized = np.clip(normed * bit_max, 0, bit_max).astype(np.uint8 if self.bitdepth <= 8 else np.uint16)
-        self.set_block(param, frame_index, quantized, type='uint', verbose=verbose)
+        bitdepth = self.bitdepth_pos[0] if param in ['x', 'y', 'z'] and self.bitdepth_pos[0] != 0 else self.bitdepth
+        bit_max = (2 ** bitdepth) - 1
+        if param != 'zero':
+          block = self.get_block(param, frame_index, type='src', verbose=verbose)
+          min_val = self.min[block_index]
+          max_val = self.max[block_index]
+          if max_val - min_val < 1e-8:
+            normed = np.zeros_like(block)
+          else:
+            normed = (block - min_val) / (max_val - min_val)
+          quantized = np.clip(np.round(normed * (bit_max + 1)), 0, bit_max).astype(np.uint8 if self.bitdepth <= 8 else np.uint16)
+          self.set_block(param, frame_index, quantized, type='uint', verbose=verbose)
+          if verbose:
+            print("  quant %-10s size = %4d x %4d, f = %3d pos = %4d %4d c = %2d bd = %2d => %20.12f => %6d" % (
+                  param, self.width, self.height, frame_index, *self.get_pack_position(block_index)[1:], bitdepth, 
+                  block[0,0], quantized[0,0]) )
 
   #######################################################################################################
 
   def _dequantize_linear(self, residual=False, verbose=False):
     if verbose:
       print(f"Dequantization (linear): packing = {self.packing.name}, type = {self.type.name}")
-    bit_max          = (2 ** self.bitdepth) - 1
     num_frames       = self.num_frames('uint')
     num_frames_video = self.video_uint.num_frames()
     num_blocks       = len(self.list_params)
-    self.video_dec.alloc(num_frames_video, self.width, self.height, 32, "444" if self.format == Format.YUV444 else "400")
+    self.video_dec.alloc(num_frames_video, self.width, self.height, 32, self.format.video_name())
     if residual:
-      self.video_res.alloc(num_frames_video, self.width, self.height, 32, "444" if self.format == Format.YUV444 else "400")
+      self.video_res.alloc(num_frames_video, self.width, self.height, 32, self.format.video_name())
     for frame_index in range(num_frames):
       for block_index, param in enumerate(self.list_params):
+        bitdepth = self.bitdepth_pos[0] if param in ['x', 'y', 'z'] and self.bitdepth_pos[0] != 0 else self.bitdepth
+        bit_max = (2 ** bitdepth) - 1
         min_val = self.min[block_index]
         max_val = self.max[block_index]
         block = self.get_block(param, frame_index, type='uint', verbose=verbose)
-        normed = block.astype(np.float32) / bit_max
+        normed = block.astype(np.float32) / (bit_max + 1)
         dequantized = normed * (max_val - min_val) + min_val
         self.set_block(param, frame_index, dequantized, type='dec', verbose=verbose)
         if residual:
           original = self.get_block(param, frame_index, type='src', verbose=verbose)
           res = original - dequantized
           self.set_block(param, frame_index, res, type='res', verbose=verbose)
+        if verbose:
+          print("  dequ %-10s size = %4d x %4d, f = %3d pos = %4d %4d c = %2d bd = %2d => %6d => %20.12f " % (
+                param, self.width, self.height, frame_index, *self.get_pack_position(block_index)[1:], bitdepth, 
+                block[0,0], dequantized[0,0]) )
 
   #######################################################################################################
   ###################################### Gaussian quantization ##########################################
   #######################################################################################################
-
+  
   def _quantize_gaussian(self, verbose=False):
     if verbose:
-      print(f"Quantization (gaussian): packing = {self.packing.name}, type = {self.type.name}")
-    self.min         = []
-    self.max         = []
-    self.center      = []
-    self.sigma       = []
-    levels_count     = (2 ** self.bitdepth) - 1
+        print(f"Quantization (gaussian): packing = {self.packing.name}, type = {self.type.name}")
+    self.min, self.max, self.center, self.sigma = [], [], [], []
     num_frames       = self.num_frames('src')
     num_frames_video = self.video_src.num_frames()
     num_blocks       = len(self.list_params)
-    self.video_uint.alloc(num_frames_video, self.width, self.height, self.bitdepth, "444" if self.format == Format.YUV444 else "400")
+    self.video_uint.alloc(num_frames_video, self.width, self.height, self.bitdepth, self.format.video_name())
     for block_index in range(num_blocks):
       param = self.list_params[block_index]
       if param in ['zero', 'x_add', 'y_add', 'z_add']:
@@ -407,30 +425,30 @@ class VideoData:
         self.center.append(0)
         self.sigma.append(1.0)
         continue
+      bitdepth = self.bitdepth_pos[0] if param in ['x', 'y', 'z'] and self.bitdepth_pos[0] != 0 else self.bitdepth
+      levels_count = 2 ** bitdepth
       values = []
       for frame_index in range(num_frames):
         block = self.get_block(param, frame_index, type='src', verbose=verbose)
         values.append(block.flatten())
       values = np.concatenate(values)
-      min_val = np.min(values)
-      max_val = np.max(values)
+      min_val, max_val = np.min(values), np.max(values)
       hist_counts, bin_edges = np.histogram(values, bins=levels_count, range=(min_val, max_val))
       bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
       center = bin_centers[np.argmax(hist_counts)]
-      def objective(sigma):
-        levels = np.linspace(min_val, max_val, levels_count)
-        indices = np.searchsorted(levels, values)
-        indices = np.clip(indices, 0, levels_count - 1)
-        quantized = levels[indices]
-        return np.sum((values - quantized) ** 2)
-      result = minimize_scalar(objective, bounds=(1e-3, max_val - min_val), method='bounded')
-      sigma = result.x
+      sigma = np.std(values)
       self.min.append(min_val)
       self.max.append(max_val)
       self.center.append(center)
       self.sigma.append(sigma)
+      if verbose:
+        print(f"  Block {block_index:2d} '{param}': min={min_val:.4f}, max={max_val:.4f}, center={center:.4f}, sigma={sigma:.4f}")
     for frame_index in range(num_frames):
       for block_index, param in enumerate(self.list_params):
+        if param in ['zero', 'x_add', 'y_add', 'z_add']:
+          continue
+        bitdepth = self.bitdepth_pos[0] if param in ['x', 'y', 'z'] and self.bitdepth_pos[0] != 0 else self.bitdepth
+        levels_count = 2 ** bitdepth
         block = self.get_block(param, frame_index, type='src', verbose=verbose).flatten()
         levels = np.linspace(self.min[block_index], self.max[block_index], levels_count)
         idx = np.searchsorted(levels, block)
@@ -438,23 +456,27 @@ class VideoData:
         quantized = idx.astype(np.uint8 if self.bitdepth <= 8 else np.uint16).reshape(self.block_height, self.block_width)
         self.set_block(param, frame_index, quantized, type='uint', verbose=verbose)
 
-  #######################################################################################################
+#######################################################################################################
 
   def _dequantize_gaussian(self, residual=False, verbose=False):
     if verbose:
       print(f"Dequantization (gaussian): packing = {self.packing.name}, type = {self.type.name}")
-    levels_count = (2 ** self.bitdepth) - 1
+
     num_frames       = self.num_frames('uint')
     num_frames_video = self.video_uint.num_frames()
     num_blocks       = len(self.list_params)
-    self.video_dec.alloc(num_frames_video, self.width, self.height, 32, "444" if self.format == Format.YUV444 else "400")
+    self.video_dec.alloc(num_frames_video, self.width, self.height, 32, self.format.video_name())
     if residual:
-      self.video_res.alloc(num_frames_video, self.width, self.height, 32, "444" if self.format == Format.YUV444 else "400")
+      self.video_res.alloc(num_frames_video, self.width, self.height, 32, self.format.video_name())
     for frame_index in range(num_frames):
       for block_index, param in enumerate(self.list_params):
+        if param in ['zero', 'x_add', 'y_add', 'z_add']:
+          continue
+        bitdepth = self.bitdepth_pos[0] if param in ['x', 'y', 'z'] and self.bitdepth_pos[0] != 0 else self.bitdepth
+        levels_count = 2 ** bitdepth
         indices = self.get_block(param, frame_index, type='uint', verbose=verbose).astype(np.int32).flatten()
-        levels = np.linspace(self.min[block_index], self.max[block_index], levels_count)
         indices = np.clip(indices, 0, levels_count - 1)
+        levels = np.linspace(self.min[block_index], self.max[block_index], levels_count)
         dequantized = levels[indices].reshape(self.block_height, self.block_width)
         self.set_block(param, frame_index, dequantized, type='dec', verbose=verbose)
         if residual:
@@ -462,4 +484,4 @@ class VideoData:
           res = original - dequantized
           self.set_block(param, frame_index, res, type='res', verbose=verbose)
 
-  #######################################################################################################
+#######################################################################################################

@@ -11,8 +11,22 @@ from utils.group_of_frames  import GroupOfFrames
 from utils.video_codec      import encode_video, decode_video
 from utils.video            import Video
 from utils.video_data       import VideoData
-from utils.v3c.type         import Quantization, V3CUnitType, Format, Packing
+from utils.v3c.type         import Quantization, V3CUnitType, Format, Packing, ColorStandard
 from utils.plas             import sort, init_device
+
+#######################################################################################################
+
+def parse_bd_pos(value):
+  try:
+    parts = value.split(",")
+    if len(parts) == 1:
+      return [int(parts[0])// 2, int(parts[0])// 2]
+    elif len(parts) == 2:
+        return [int(parts[0]), int(parts[1])]
+    else:
+        raise ValueError
+  except Exception:
+    raise argparse.ArgumentTypeError("bd_pos must be 'MSB,LSB' or a single integer")
 
 #######################################################################################################
 
@@ -58,6 +72,7 @@ def parse_args():
                                                  '    - vtr: VTM reference software with high bit depht support \n',   
                                                                             default=argparse.SUPPRESS)
   main.add_argument('--config_0..31',       help='Video encoder configuration files',                   default=argparse.SUPPRESS)
+  main.add_argument('--dqp_0..31',          help='Video encoder dQP files',                             default=argparse.SUPPRESS)
   main.add_argument('--comp_0..31',         help='List of components for nth video (comma-separated)\n'
                                                  '  Components can be: \n'
                                                  '    - x,y,z: position coordinates (LSB)\n'
@@ -67,19 +82,44 @@ def parse_args():
                                                  '    - rot_0,rot_1,rot_2,rot_3: rotation \n' 
                                                  '    - f_dc_0,f_dc_1,f_dc_2: colors \n'
                                                  '    - f_rest_0,f_rest_1,...,f_rest_44: spherical harmonics \n' 
-                                                 '    - zero: add zero component to the video',          default=argparse.SUPPRESS)
+                                                 '    - zero: add zero component to the video',          default=argparse.SUPPRESS)                                                 
+  main.add_argument('--subsampling_0..31',  help='Subsampling method for nth video\n'
+                                                 '  0: none\n'
+                                                 '  1: Simple drop (420)\n'
+                                                 '  2: Average (420)',                  default=argparse.SUPPRESS)
   for i in range(21):
     main.add_argument(f'--bd_{i}',          help=argparse.SUPPRESS,                   default=10,             type=int)
     main.add_argument(f'--qp_{i}',          help=argparse.SUPPRESS,                   default=0,              type=int)
     main.add_argument(f'--format_{i}',      help=argparse.SUPPRESS,                   default='yuv400',       type=str, choices=['yuv400', 'yuv420', 'yuv444'])
     main.add_argument(f'--packing_{i}',     help=argparse.SUPPRESS,                   default='planar',       type=str, choices=['planar', 'temporal'])
     main.add_argument(f'--quant_{i}',       help=argparse.SUPPRESS,                   default='linear',       type=str, choices=['linear', 'gaussian'])
-    main.add_argument(f'--codec_{i}',       help=argparse.SUPPRESS,                   default=None,           type=str, choices=['x264','x265','hm', 'vtm', 'vtr'])
+    main.add_argument(f'--codec_{i}',       help=argparse.SUPPRESS,                   default=None,           type=str, choices=['x264','x265','hm', 'hmr', 'hmd', 'vtm', 'vtr'])
     main.add_argument(f'--config_{i}',      help=argparse.SUPPRESS,                   default=[],             type=comma_separated_list)
     main.add_argument(f'--comp_{i}',        help=argparse.SUPPRESS,                   default=[],             type=comma_separated_list)
+    main.add_argument(f'--dqp_{i}',         help=argparse.SUPPRESS,                   default="",             type=str)    
+    main.add_argument(f'--subsampling_{i}', help=argparse.SUPPRESS,                   default=1,              type=int)
 
   main = parser.add_argument_group('Transform')
-  main.add_argument('--trans_position',     help='Transform position: signed log',    default=1,              type=int )
+  main.add_argument('--bd_pos',             help='Position coordinate bit depth specification.\n'
+                                                 'You can provide either:\n'
+                                                 '  - a single integer (e.g. 12): the total number of bits for the coordinate.\n'
+                                                 '  - two integers separated by a comma (e.g. 8,4):\n'
+                                                 '    - the first value is the number of bits kept in the MSB part (main x,y,z).\n'
+                                                 '    - the second value is the number of bits stored in the LSB part (x_add,y_add,z_add).\n'
+                                                 '  - If value is 0, the corresponding depth is automatically set to the video bit depth.\n' , default="0",    type=parse_bd_pos )  
+  main.add_argument('--trans_position',     help='Transform position: signed log',    default=1,              type=int)
+  main.add_argument('--sh_conversion',      help='Spherical harmonics conversion method applied on videos\n'
+                                                 '  - 0: None \n'
+                                                 '  - 601: BT. 601 \n'
+                                                 '  - 709: BT. 709 \n'
+                                                 '  - 2020: BT. 2020 \n',             default='0',            type=str, choices=['0', '601', '709', '2020'])
+
+
+  main.add_argument('--src_sh_conversion',  help='Spherical harmonics conversion method applied on source pointclouds\n'
+                                                 '  - 0: None \n'
+                                                 '  - 601: BT. 601 \n'
+                                                 '  - 709: BT. 709 \n'
+                                                 '  - 2020: BT. 2020 \n',             default='0',            type=str, choices=['0', '601', '709', '2020'])
 
   main = parser.add_argument_group('Plot and traces')        
   main.add_argument('-v','--verbose',       help='Verbose',                           default=False,          action='store_true')
@@ -186,19 +226,23 @@ if __name__ == '__main__':
   if not args.decode_only:
 
     # Create group of frames object
-    gof_enc = GroupOfFrames( 0, codecs=codecs, bit_depth_pos=args.bit_depth_pos, bit_depth_att=args.bit_depth_att )
+    gof_enc = GroupOfFrames( 0, codecs=codecs, bit_depth_pos=args.bit_depth_pos, bit_depth_att=args.bit_depth_att, 
+                              src_sh_conversion = ColorStandard.from_string( args.src_sh_conversion ) )
     for j in range(21):
       if getattr(args, f'comp_{j}') != []:
-        gof_enc.create_video( video_index    = j, 
-                              list_params    = getattr(args, f'comp_{j}'), 
-                              bitdepth       = getattr(args, f'bd_{j}'), 
-                              qp             = getattr(args, f'qp_{j}'), 
-                              codec_id       = codecs.index(getattr(args, f'codec_{j}')), 
-                              format         = Format.from_string( getattr(args, f'format_{j}')), 
-                              packing        = Packing.from_string( getattr(args, f'packing_{j}')), 
-                              quantization   = Quantization.from_string( getattr(args, f'quant_{j}')), 
-                              trans_position = args.trans_position,
-                              verbose        = args.verbose )
+        gof_enc.create_video( video_index       = j, 
+                              list_params       = getattr(args, f'comp_{j}'), 
+                              bitdepth          = getattr(args, f'bd_{j}'), 
+                              bitdepth_pos      = args.bd_pos,
+                              qp                = getattr(args, f'qp_{j}'), 
+                              codec_id          = codecs.index(getattr(args, f'codec_{j}')), 
+                              format            = Format.from_string( getattr(args, f'format_{j}')), 
+                              packing           = Packing.from_string( getattr(args, f'packing_{j}')), 
+                              quantization      = Quantization.from_string( getattr(args, f'quant_{j}')), 
+                              trans_position    = args.trans_position,
+                              sh_conversion     = ColorStandard.from_string( args.sh_conversion ),
+                              subsampling       = getattr(args, f'subsampling_{j}'),
+                              verbose           = args.verbose )
 
     # Get number of of gaussian in gof 
     min_num_gaussian = min_num_gaussian_in_gof( path=args.input, first_frame=args.first_frame, num_frames=args.num_frames, verbose=args.verbose )
@@ -209,6 +253,8 @@ if __name__ == '__main__':
       # Read point cloud 
       pc = Pointcloud( path=args.input, index = args.first_frame + frame_index, verbose = args.verbose )
 
+      if args.verbose: 
+        pc.print("PC_org", num = 1)
       # Sorting
       sort( pointcloud       = pc,     
             num_points_gof   = min_num_gaussian,
@@ -224,20 +270,36 @@ if __name__ == '__main__':
             device           = device, 
             verbose          = args.verbose )
 
-      # Set videos       
+      if args.verbose: 
+        pc.print("PC_sort", num = 1)
+                    
+      # Src color conversion
+      if gof_enc.src_sh_conversion != ColorStandard.NONE:
+        pc.rgb2yuv(gof_enc.src_sh_conversion, verbose=args.verbose)
+
+      if args.verbose: 
+        pc.print("yuv", num = 1)
+                    
+      # Set videos
       gof_enc.set_video(pointcloud = pc, verbose = args.verbose )
       
       if args.verbose:
         print("Frame %2d: " % (args.first_frame + frame_index))
         for type, video in gof_enc.videos.items():
           print("  Video %10s: %4d x %4d grid = %3d %3d x %2d %2d num frame = %d " %  
-            (type.name, video.width, video.height, gof_enc.block_width, gof_enc.block_height, video.grid_width, video.grid_height, video.video_src.num_frames() ) ) 
+            (type.name, video.width, video.height, gof_enc.block_width, gof_enc.block_height, video.grid_width, video.grid_height, video.video_src.num_frames() ) )           
 
     # Quantize videos
     if gof_enc.bit_depth_pos == 32 and gof_enc.bit_depth_att == 32:
       gof_enc.quantize(verbose=args.verbose)
     else:
       gof_enc.reduce_bitdepth(verbose=args.verbose)
+
+    # Convert SH
+    gof_enc.rgb2yuv(verbose=args.verbose)
+
+    # Subsample videos
+    gof_enc.subsample(verbose=args.verbose)
 
     # Verbose
     if args.verbose:
@@ -257,7 +319,8 @@ if __name__ == '__main__':
                           output_dir = output_dir, 
                           video      = video.video_uint, 
                           codec      = gof_enc.codecs[video.codec_id], 
-                          config     = getattr(args, f'config_{index}'), 
+                          config     = getattr(args, f'config_{index}'),                           
+                          dqp        = getattr(args, f'dqp_{index}'),
                           qp         = video.qp,
                           verbose    = args.verbose)
         for index, (type, video) in enumerate(gof_enc.videos.items())
@@ -303,7 +366,7 @@ if __name__ == '__main__':
                         height     = video.height, 
                         fps        = gof_dec.fps, 
                         bits       = video.bitdepth, 
-                        num_comp   = 1 if video.format == Format.YUV400 else 3, 
+                        format     = video.format, 
                         video      = video.video_uint, 
                         codec      = gof_dec.codecs[video.codec_id],
                         verbose    = args.verbose)
@@ -311,6 +374,12 @@ if __name__ == '__main__':
     ]
     for future in concurrent.futures.as_completed(futures):
       future.result()
+  
+  # Upsample videos (when Format is YUV420)
+  gof_dec.upsample(verbose=args.verbose)
+
+  # Convert SH  
+  gof_dec.yuv2rgb(verbose=args.verbose)
 
   # Dequantize
   if gof_dec.bit_depth_pos == 32 and gof_dec.bit_depth_att == 32:
@@ -325,6 +394,10 @@ if __name__ == '__main__':
   for frame_index in range(gof_dec.num_frames('dec')):
     # Get decoded pointcloud
     dec = gof_dec.get_pointcloud( frame_index, args.verbose )
+
+    # Dec color conversion
+    if gof_dec.src_sh_conversion != ColorStandard.NONE:
+      dec.yuv2rgb(gof_dec.src_sh_conversion, verbose=args.verbose)
 
     # Save decoded pointcloud
     dec.write(args.rec if args.rec != '' else ( remove_extension(args.bin) + '_%04d_rec.ply'), 

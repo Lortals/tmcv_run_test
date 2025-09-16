@@ -5,6 +5,7 @@ import pandas as pd
 import trimesh 
 from plyfile import PlyData, PlyElement
 from utils.common import make_path
+from utils.v3c.type import ColorStandard
 
 #######################################################################################################
 
@@ -140,3 +141,57 @@ class Pointcloud:
                                                       self.df['y'].values.max(), self.df['z'].values.min(), self.df['z'].values.max() ))
 
   #######################################################################################################
+  
+  def rgb2yuv(self, colorStandard, verbose=False):
+    num_points = len(self.df)
+    if verbose:
+        print("Applying RGB to YUV conversion to spherical harmonics")
+    # DC components
+    if all(f'f_dc_{i}' in self.df.columns for i in range(3)):
+        r = self.df['f_dc_0'].values
+        g = self.df['f_dc_1'].values
+        b = self.df['f_dc_2'].values
+        y, cb, cr = colorStandard.rgb2yuv_float(r, g, b)
+        self.df['f_dc_0'] = y  
+        self.df['f_dc_1'] = cb 
+        self.df['f_dc_2'] = cr 
+    # REST components
+    for group_idx in range(0, 15):
+        r = self.df[f'f_rest_{group_idx}'].values
+        g = self.df[f'f_rest_{group_idx + 15}'].values
+        b = self.df[f'f_rest_{group_idx + 30}'].values
+        y, cb, cr = colorStandard.rgb2yuv_float(r, g, b)
+        self.df[f'f_rest_{group_idx}']      = y  
+        self.df[f'f_rest_{group_idx + 15}'] = cb 
+        self.df[f'f_rest_{group_idx + 30}'] = cr 
+        if verbose:
+            print(f"  Converted f_rest_{group_idx}, {group_idx + 15}, {group_idx + 30} (RGB -> YUV)")
+
+  #######################################################################################################
+
+  def yuv2rgb(self, colorStandard, verbose=False):
+    num_points = len(self.df)
+    if verbose:
+        print("Applying YUV to RGB inverse conversion to spherical harmonics with denormalization")
+    # DC components
+    if all(f'f_dc_{i}' in self.df.columns for i in range(3)):
+        y  = self.df['f_dc_0'].values
+        cb = self.df['f_dc_1'].values
+        cr = self.df['f_dc_2'].values
+        r, g, b = colorStandard.yuv2rgb_float(y, cb, cr)
+        self.df['f_dc_0'] = r
+        self.df['f_dc_1'] = g
+        self.df['f_dc_2'] = b
+    # REST components
+    for group_idx in range(0, 15):
+        y  = self.df[f'f_rest_{group_idx}'].values
+        cb = self.df[f'f_rest_{group_idx + 15}'].values
+        cr = self.df[f'f_rest_{group_idx + 30}'].values
+        r, g, b = colorStandard.yuv2rgb_float(y, cb, cr)
+        self.df[f'f_rest_{group_idx}']      = r
+        self.df[f'f_rest_{group_idx + 15}'] = g
+        self.df[f'f_rest_{group_idx + 30}'] = b
+        if verbose:
+            print(f"  Converted f_rest_{group_idx}, {group_idx + 15}, {group_idx + 30} (YUV -> RGB)")
+
+#######################################################################################################

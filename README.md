@@ -250,9 +250,9 @@ The configuration files are:
  python.exe encode.py  \
   -c    ./cfg/ffmpeg/temporal_7_videos.cfg \
   -i    /g/gs/mpeg_20250707/m71763_bartender_stable/track_pos/frame%03d_pos.ply \
-  -b    ./test/temporal_7_videos/test.v3c \
-  --rec ./test/temporal_7_videos/test_rec_%04d.ply \
-  -n 4 \
+  -b    ../test/temporal_7_videos/test.v3c \
+  --rec ../test/temporal_7_videos/test_rec_%04d.ply \
+  -n 2 \
   -v  
 ``` 
 
@@ -260,18 +260,18 @@ The configuration files are:
 
 ```bash
  python.exe decode.py  \
-  -b    test/temporal_7_videos/test.v3c \
-  --dec test/temporal_7_videos/test_dec_%04d.ply \
+  -b    ../test/temporal_7_videos/test.v3c \
+  --dec ../test/temporal_7_videos/test_dec_%04d.ply \
   -v
 ``` 
 
 ## Rendering
 
 ```bash
-../mpeg-3d-renderer/bin/windows/Release/PccAppRenderer.exe \
-  -f ./test/temporal_7_videos/test_dec_%04d.ply  \
+./mpeg-3d-renderer/bin/windows/Release/PccAppRenderer.exe \
+  -f ../test/temporal_7_videos/test_dec_%04d.ply  \
   -g 1 \
-  -n 4
+  -n 2
 ``` 
 
 # Example with quantified data

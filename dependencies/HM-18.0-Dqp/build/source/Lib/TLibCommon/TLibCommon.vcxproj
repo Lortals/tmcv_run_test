@@ -1,0 +1,372 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{C5EA5A1A-C956-3A49-B95C-9E7EC3C29171}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.22000.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>TLibCommon</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\lib\vs16\msvc-19.29\x86_64\debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">TLibCommon.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">TLibCommon</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\lib\vs16\msvc-19.29\x86_64\release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TLibCommon.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TLibCommon</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\lib\vs16\msvc-19.29\x86_64\minsizerel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">TLibCommon.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">TLibCommon</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\lib\vs16\msvc-19.29\x86_64\relwithdebinfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">TLibCommon.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">TLibCommon</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.lib</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.\x86;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..\libmd5;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <OpenMPSupport>true</OpenMPSupport>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;JVET_AK0194_DSC_SEI=0;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;JVET_AK0194_DSC_SEI=0;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.\x86;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..\libmd5;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.\x86;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..\libmd5;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.\x86;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..\libmd5;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <OpenMPSupport>true</OpenMPSupport>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;JVET_AK0194_DSC_SEI=0;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;JVET_AK0194_DSC_SEI=0;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.\x86;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..\libmd5;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.\x86;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..\libmd5;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.\x86;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..\libmd5;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <OpenMPSupport>true</OpenMPSupport>
+      <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;JVET_AK0194_DSC_SEI=0;CMAKE_INTDIR="MinSizeRel"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;JVET_AK0194_DSC_SEI=0;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.\x86;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..\libmd5;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.\x86;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..\libmd5;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.\x86;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..\libmd5;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <OpenMPSupport>true</OpenMPSupport>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;JVET_AK0194_DSC_SEI=0;CMAKE_INTDIR="RelWithDebInfo"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;JVET_AK0194_DSC_SEI=0;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.\x86;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..\libmd5;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\.\x86;C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\..\libmd5;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/source/Lib/TLibCommon/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0 -BC:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build --check-stamp-file C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build/source/Lib/TLibCommon/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files\CMake\share\cmake-3.28\Modules\FindOpenSSL.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\SelectLibraryConfigurations.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\build\source\Lib\TLibCommon\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/source/Lib/TLibCommon/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0 -BC:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build --check-stamp-file C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build/source/Lib/TLibCommon/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files\CMake\share\cmake-3.28\Modules\FindOpenSSL.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\SelectLibraryConfigurations.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\build\source\Lib\TLibCommon\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/source/Lib/TLibCommon/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0 -BC:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build --check-stamp-file C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build/source/Lib/TLibCommon/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Program Files\CMake\share\cmake-3.28\Modules\FindOpenSSL.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\SelectLibraryConfigurations.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\build\source\Lib\TLibCommon\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/source/Lib/TLibCommon/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0 -BC:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build --check-stamp-file C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build/source/Lib/TLibCommon/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Program Files\CMake\share\cmake-3.28\Modules\FindOpenSSL.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\SelectLibraryConfigurations.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\build\source\Lib\TLibCommon\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\ContextModel.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\ContextModel3DBuffer.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\Debug.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\ProfileLevelTierFeatures.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\SEI.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\SEIDigitallySignedContent.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\SEIFilmGrainAnalyzer.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\SEIFilmGrainSynthesizer.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComBitStream.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComCABACTables.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComChromaFormat.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComDataCU.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComInterpolationFilter.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComLoopFilter.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComMotionInfo.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComPattern.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComPic.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComPicSym.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComPicYuv.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComPicYuvMD5.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComPrediction.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComRdCost.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComRdCostWeightPrediction.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComRom.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComSampleAdaptiveOffset.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComSlice.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComTU.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComTrQuant.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComWeightPrediction.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComYuv.cpp" />
+    <ClCompile Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\libmd5\libmd5.cpp" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\AccessUnit.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\CommonDef.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\ContextModel.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\ContextModel3DBuffer.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\ContextTables.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\Debug.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\NAL.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\ProfileLevelTierFeatures.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\SEI.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\SEIDigitallySignedContent.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\SEIFilmGrainAnalyzer.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\SEIFilmGrainSynthesizer.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComBitCounter.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComBitStream.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComCABACTables.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComChromaFormat.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComCodingStatistics.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComDataCU.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComInterpolationFilter.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComList.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComLoopFilter.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComMotionInfo.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComMv.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComPattern.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComPic.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComPicSym.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComPicYuv.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComPrediction.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComRdCost.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComRdCostWeightPrediction.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComRectangle.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComRom.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComSampleAdaptiveOffset.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComSlice.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComTU.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComTrQuant.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComWeightPrediction.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TComYuv.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\TLibCommon\TypeDef.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\libmd5\MD5.h" />
+    <ClInclude Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\source\Lib\libmd5\libmd5.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\build\ZERO_CHECK.vcxproj">
+      <Project>{22AD6722-BB1A-3518-82E5-DE378D531576}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

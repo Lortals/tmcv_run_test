@@ -6,7 +6,7 @@ import concurrent.futures
 from utils.common           import handler_ctrl_c, remove_extension, print_args, create_output_dir
 from utils.group_of_frames  import GroupOfFrames
 from utils.video_codec      import decode_video
-from utils.v3c.type         import Format
+from utils.v3c.type         import Format, ColorStandard
 
 #######################################################################################################
 
@@ -72,7 +72,7 @@ if __name__ == '__main__':
                         height     = video.height, 
                         fps        = gof_dec.fps, 
                         bits       = video.bitdepth, 
-                        num_comp   = 1 if video.format == Format.YUV400 else 3, 
+                        format     = video.format, 
                         video      = gof_dec.videos[key].video_uint, 
                         codec      = gof_dec.codecs[video.codec_id],
                         verbose    = args.verbose)
@@ -80,6 +80,12 @@ if __name__ == '__main__':
     ]
     for future in concurrent.futures.as_completed(futures):
       future.result() 
+
+  # Upsample videos (when Format is YUV420)
+  gof_dec.upsample(verbose=args.verbose)
+
+  # Convert SH
+  gof_dec.yuv2rgb(verbose=args.verbose)
 
   # Dequantize  
   if gof_dec.bit_depth_pos == 32 and gof_dec.bit_depth_att == 32:
@@ -96,6 +102,10 @@ if __name__ == '__main__':
   for frame_index in range(gof_dec.num_frames('dec')):
     # Decode pointcloud
     dec = gof_dec.get_pointcloud( frame_index, args.verbose )
+
+    # Dec color conversion
+    if gof_dec.src_sh_conversion != ColorStandard.NONE:
+      dec.yuv2rgb(gof_dec.src_sh_conversion, verbose=args.verbose)
 
     # Save decoded pointcloud    
     dec.write(args.dec if args.dec != '' else ( remove_extension(args.bin) + '_%04d_dec.ply'), 

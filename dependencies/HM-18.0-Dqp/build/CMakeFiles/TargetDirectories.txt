@@ -1,0 +1,15 @@
+C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build/CMakeFiles/ZERO_CHECK.dir
+C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build/source/Lib/TLibCommon/CMakeFiles/TLibCommon.dir
+C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build/source/Lib/TLibCommonAnalyser/CMakeFiles/TLibCommonAnalyser.dir
+C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build/source/Lib/TLibDecoder/CMakeFiles/TLibDecoder.dir
+C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build/source/Lib/TLibDecoderAnalyser/CMakeFiles/TLibDecoderAnalyser.dir
+C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build/source/Lib/TLibEncoder/CMakeFiles/TLibEncoder.dir
+C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build/source/Lib/Utilities/CMakeFiles/Utilities.dir
+C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build/source/App/TAppDecoder/CMakeFiles/TAppDecoder.dir
+C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build/source/App/TAppDecoderAnalyser/CMakeFiles/TAppDecoderAnalyser.dir
+C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build/source/App/TAppEncoder/CMakeFiles/TAppEncoder.dir
+C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build/source/App/TAppMCTSExtractor/CMakeFiles/MCTSExtractor.dir
+C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build/source/App/Parcat/CMakeFiles/parcat.dir
+C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build/source/App/SEIRemovalApp/CMakeFiles/SEIRemovalApp.dir
+C:/Users/ricar/dev/mpeg-gsc-tmcv-m73294/dependencies/HM-18.0/build/source/App/SEIFilmGrainApp/CMakeFiles/SEIFilmGrainApp.dir

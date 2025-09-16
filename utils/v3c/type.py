@@ -1,6 +1,7 @@
 
 
 from enum import Enum
+import numpy as np
 import re
 
 #######################################################################################################
@@ -94,7 +95,104 @@ class Quantization(Enum):
       "gaussian": Quantization.GAUSSIAN,
       "none":     Quantization.NONE
     }
-    return name_mapping.get(name.lower(), None)
+    try:
+      return name_mapping[name.lower()]
+    except KeyError:
+      raise ValueError(f"Unknown quantization type: {name}")
+
+#######################################################################################################
+################################### Color standart ####################################################
+#######################################################################################################
+
+class ColorStandard(Enum):
+  NONE = 0
+  BT601 = 1
+  BT709 = 2
+  BT2020 = 3
+
+  @classmethod
+  def from_string(cls, name: str) -> "ColorStandard | None":
+    name_mapping = {
+      "0": ColorStandard.NONE,
+      "601": ColorStandard.BT601,
+      "709": ColorStandard.BT709,
+      "2020": ColorStandard.BT2020,
+    }
+    try:
+      return name_mapping[name.lower()]
+    except KeyError:
+      raise ValueError(f"Unknown color standard: {name}")
+    
+  def rgb2yuv_uint16(self, block_r: np.ndarray, block_g: np.ndarray, block_b: np.ndarray, bitdepth: int):
+    max_val = 2**bitdepth - 1
+    R = block_r.astype(np.float32) / max_val
+    G = block_g.astype(np.float32) / max_val
+    B = block_b.astype(np.float32) / max_val
+    coeffs = {
+      ColorStandard.BT601: (0.2990, 0.5870, 0.1140, 0.5640, 0.7130),
+      ColorStandard.BT709: (0.2126, 0.7152, 0.0722, 0.5389, 0.6350),
+      ColorStandard.BT2020: (0.2627, 0.6780, 0.0593, 0.6780, 0.6350),
+    }
+    if self not in coeffs:
+      raise ValueError(f"Unsupported color standard: {self}")
+    Kr, Kg, Kb, cb_fac, cr_fac = coeffs[self]
+    Yf  = Kr * R + Kg * G + Kb * B
+    Cbf = cb_fac * (B - Yf) + 0.5
+    Crf = cr_fac * (R - Yf) + 0.5
+    Y  = np.clip(np.round(Yf * max_val),  0, max_val).astype(np.uint16)
+    Cb = np.clip(np.round(Cbf * max_val), 0, max_val).astype(np.uint16)
+    Cr = np.clip(np.round(Crf * max_val), 0, max_val).astype(np.uint16)
+    return Y, Cb, Cr
+
+  def yuv2rgb_uint16(self, block_y: np.ndarray, block_cb: np.ndarray, block_cr: np.ndarray, bitdepth: int):
+      max_val = 2**bitdepth - 1
+      Yf  = block_y.astype(np.float32) / max_val
+      Cbf = block_cb.astype(np.float32) / max_val
+      Crf = block_cr.astype(np.float32) / max_val
+      coeffs = {
+        ColorStandard.BT601: (0.2990, 0.5870, 0.1140, 1.4020, 1.7720),
+        ColorStandard.BT709: (0.2126, 0.7152, 0.0722, 1.5748, 1.8556),
+        ColorStandard.BT2020: (0.2627, 0.6780, 0.0593, 1.4746, 1.8814),
+      }
+      if self not in coeffs:
+        raise ValueError(f"Unsupported color standard: {self}")
+
+      Kr, Kg, Kb, cr_gain, cb_gain = coeffs[self]
+      Rf = Yf + cr_gain * (Crf - 0.5)
+      Bf = Yf + cb_gain * (Cbf - 0.5)
+      Gf = (Yf - Kr*Rf - Kb*Bf) / Kg
+      R = np.clip(np.round(Rf * max_val), 0, max_val).astype(np.uint16)
+      G = np.clip(np.round(Gf * max_val), 0, max_val).astype(np.uint16)
+      B = np.clip(np.round(Bf * max_val), 0, max_val).astype(np.uint16)
+      return R, G, B
+
+  def rgb2yuv_float(self, R: np.ndarray, G: np.ndarray, B: np.ndarray):
+      coeffs = {
+          ColorStandard.BT601: (0.2990, 0.5870, 0.1140, 0.5640, 0.7130),
+          ColorStandard.BT709: (0.2126, 0.7152, 0.0722, 0.5389, 0.6350),
+          ColorStandard.BT2020: (0.2627, 0.6780, 0.0593, 0.6780, 0.6350),
+      }
+      if self not in coeffs:
+          raise ValueError(f"Unsupported color standard: {self}")
+      Kr, Kg, Kb, cb_fac, cr_fac = coeffs[self]
+      Y  = Kr * R + Kg * G + Kb * B
+      Cb = cb_fac * (B - Y) + 0.5
+      Cr = cr_fac * (R - Y) + 0.5
+      return Y, Cb, Cr
+
+  def yuv2rgb_float(self, Y: np.ndarray, Cb: np.ndarray, Cr: np.ndarray):
+      coeffs = {
+          ColorStandard.BT601: (0.2990, 0.5870, 0.1140, 1.4020, 1.7720),
+          ColorStandard.BT709: (0.2126, 0.7152, 0.0722, 1.5748, 1.8556),
+          ColorStandard.BT2020: (0.2627, 0.6780, 0.0593, 1.4746, 1.8814),
+      }
+      if self not in coeffs:
+          raise ValueError(f"Unsupported color standard: {self}")
+      Kr, Kg, Kb, cr_gain, cb_gain = coeffs[self]
+      R = Y + cr_gain * (Cr - 0.5)
+      B = Y + cb_gain * (Cb - 0.5)
+      G = (Y - Kr*R - Kb*B) / Kg
+      return R, G, B
 
 #######################################################################################################
 ################################### Format id #########################################################
@@ -112,7 +210,18 @@ class Format(Enum):
       "yuv420": Format.YUV420,
       "yuv400": Format.YUV400
     }
-    return name_mapping.get(name.lower(), None)
+    try:
+      return name_mapping[name.lower()]
+    except KeyError:
+      raise ValueError(f"Unknown video format: {name}")
+
+  def video_name(self) -> str:
+      mapping = {
+          Format.YUV444: "444",
+          Format.YUV420: "420",
+          Format.YUV400: "400",
+      }
+      return mapping[self]
 
 #######################################################################################################
 ################################### Packing id ########################################################
@@ -128,7 +237,10 @@ class Packing(Enum):
       "planar":   Packing.PLANAR,
       "temporal": Packing.TEMPORAL
     }
-    return name_mapping.get(name.lower(), None)
+    try:
+      return name_mapping[name.lower()]
+    except KeyError:
+      raise ValueError(f"Unknown patcking type: {name}")
 
 #######################################################################################################
 ################################### Nal unit type #####################################################

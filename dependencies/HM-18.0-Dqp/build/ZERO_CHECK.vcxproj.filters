@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\ricar\dev\mpeg-gsc-tmcv-m73294\dependencies\HM-18.0\build\CMakeFiles\bb26737a1b8563ea8b7d1b5f330206eb\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{78C5AA45-C9A0-314F-9F6B-5B50678C52E2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

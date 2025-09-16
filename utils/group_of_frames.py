@@ -4,7 +4,7 @@ from utils.video_data                 import VideoData
 from utils.bitstream                  import Bitstream
 from utils.pointcloud                 import Pointcloud
 from utils.stat                       import Stat
-from utils.v3c.type                   import NalUnitType, V3CUnitType, SeiPayloadType, Packing, Format
+from utils.v3c.type                   import NalUnitType, V3CUnitType, SeiPayloadType, Packing, Format, ColorStandard
 from utils.v3c.v3c_parameter_set      import V3cParameterSet
 from utils.v3c.atlas_sub_bitstream    import AtlasSubBitstream
 from utils.v3c.video_sub_bitstream    import VideoSubBitstream
@@ -21,32 +21,37 @@ class GroupOfFrames:
 
   #######################################################################################################
 
-  def __init__(self, index=0, codecs=[], bit_depth_pos=32, bit_depth_att=32): 
-    self.index          = index
-    self.videos         = {}
-    self.stat           = Stat()
-    self.codecs         = codecs 
-    self.fps            = 30 
-    self.block_width    = 0
-    self.block_height   = 0  
-    self.bit_depth_pos  = bit_depth_pos
-    self.bit_depth_att  = bit_depth_att
-    self.camera_df      = None
+  def __init__(self, index=0, codecs=[], bit_depth_pos=32, bit_depth_att=32, src_sh_conversion=ColorStandard.NONE): 
+    self.index             = index
+    self.videos            = {}
+    self.stat              = Stat()
+    self.codecs            = codecs 
+    self.fps               = 30 
+    self.block_width       = 0
+    self.block_height      = 0  
+    self.bit_depth_pos     = bit_depth_pos
+    self.bit_depth_att     = bit_depth_att  
+    self.src_sh_conversion = src_sh_conversion
+    self.camera_df         = None
 
   #######################################################################################################
 
-  def create_video(self, video_index, list_params, bitdepth, qp, codec_id, format, packing, quantization, trans_position, verbose=False):
+  def create_video(self, video_index, list_params, bitdepth, bitdepth_pos, qp, codec_id, format, packing, quantization, 
+                   trans_position, sh_conversion, subsampling, verbose=False):
     type = V3CUnitType( V3CUnitType.V3C_GSC_0.value + video_index )
-    self.videos[type] = VideoData(type           = type,
-                                  list_params    = list_params,
-                                  bitdepth       = bitdepth, 
-                                  qp             = qp, 
-                                  codec_id       = codec_id, 
-                                  format         = format,
-                                  packing        = packing,
-                                  quantization   = quantization,
-                                  trans_position = trans_position, 
-                                  verbose        = verbose)
+    self.videos[type] = VideoData(type               = type,
+                                  list_params        = list_params,
+                                  bitdepth           = bitdepth, 
+                                  bitdepth_pos       = bitdepth_pos,
+                                  qp                 = qp, 
+                                  codec_id           = codec_id, 
+                                  format             = format,
+                                  packing            = packing,
+                                  quantization       = quantization,
+                                  trans_position     = trans_position, 
+                                  sh_conversion      = sh_conversion,
+                                  subsampling        = subsampling,
+                                  verbose            = verbose)
     
   #######################################################################################################
 
@@ -76,7 +81,7 @@ class GroupOfFrames:
     for param in ['x', 'y', 'z']:
       for video in self.videos.values():
         if param in video.list_params:
-          bd[param] = video.bitdepth
+          bd[param] = video.bitdepth if self.bit_depth_pos[0] == 0 else self.bit_depth_pos[0]
           break
       else:
         bd[param] = 0
@@ -106,23 +111,25 @@ class GroupOfFrames:
     for name, video in self.videos.items():
       num_frames       = video.num_frames('src')
       num_frames_video = video.video_src.num_frames()                       
-      video.video_uint.alloc(num_frames_video, video.width, video.height, video.bitdepth, "444" if video.format == Format.YUV444 else "400")      
-      shift_pos = self.bit_depth_pos - video.bitdepth
-      shift_att = self.bit_depth_att - video.bitdepth
+      video.video_uint.alloc(num_frames_video, video.width, video.height, video.bitdepth, video.format.video_name() )      
+      
       if verbose:
         print("  reduce %10s: bit_depth_pos = %d bitdepth = %d = shift  = %d " % (video.name(), self.bit_depth_pos,  video.bitdepth, shift_pos))
 
       for frame_index in range(num_frames):
         for param in video.list_params:
           if param in ['x', 'y', 'z']:        # Shift MSB for positions    
+            bitdepth = video.bitdepth if video.bitdepth_pos[0] == 0 else video.bitdepth_pos[0]
+            shift_pos = self.bit_depth_pos - bitdepth
             block = video.get_block(param, frame_index, type='src', verbose=verbose)
             block_uint = (block.astype(np.uint32) >> shift_pos).astype(np.uint8 if video.bitdepth <= 8 else np.uint16)
             if verbose: 
               print("    %-10s: value %2d bits = %4d >> %2d <=> value %2d bits = %4d" % 
-                    ( param, self.bit_depth_pos, block.astype(np.uint32)[0,0], shift_pos, video.bitdepth, block_uint[0,0]))
+                    ( param, self.bit_depth_pos, block.astype(np.uint32)[0,0], shift_pos, bitdepth, block_uint[0,0]))
               print("      block uint = ", block_uint.flatten())
               print("      block s/d  = ", block.flatten())
           elif param in ['x_add', 'y_add', 'z_add']:
+            bitdepth        = video.bitdepth if video.bitdepth_pos[1] == 0 else video.bitdepth_pos[1]            
             base            = param[0]  # 'x', 'y', 'z'
             video_xyz       = self.get_video_with_param( base )
             full_block      = video_xyz.get_block(base, frame_index, type='src', verbose=verbose)       
@@ -135,7 +142,7 @@ class GroupOfFrames:
               if verbose:
                 print("    %-10s: remaining bits <= 0. New block = 0." % param)        
             else:
-              extract_bits = min(remaining_bits, video.bitdepth)
+              extract_bits = min(remaining_bits, bitdepth)
               mask         = (1 << remaining_bits) - 1      # LSB mask 
               shift_bits   = remaining_bits - extract_bits  # keep MSB in the LSB
               block_uint   = full_block_uint & mask                            
@@ -143,10 +150,11 @@ class GroupOfFrames:
               block_uint   = block_uint.astype(np.uint8 if video.bitdepth <= 8 else np.uint16)
               if verbose:
                 print("    %-10s: value %2d bits = %4d: remain = %2d shift = %2d <=> value %2d bits = %4d" % (
-                      param, self.bit_depth_pos, full_block[0,0], remaining_bits, shift_bits, video.bitdepth, block_uint[0,0] ))                      
+                      param, self.bit_depth_pos, full_block[0,0], remaining_bits, shift_bits, bitdepth, block_uint[0,0] ))                      
               print("      block src  = ", full_block_uint.flatten())
               print("      block uint = ", block_uint.flatten())
           else:
+            shift_att  = self.bit_depth_att - video.bitdepth
             block_src  = video.get_block(param, frame_index, type='src', verbose=verbose)
             block_uint = (block_src.astype(np.uint32) >> shift_att).astype(np.uint8 if video.bitdepth <= 8 else np.uint16)
             if verbose:
@@ -154,8 +162,7 @@ class GroupOfFrames:
                   param, self.bit_depth_att, block_src.astype(np.uint32)[0,0], shift_att, video.bitdepth,block_uint[0,0])) 
               print("      block uint = ", block_uint.flatten())
               print("      block s/d  = ", block_src.flatten())
-          video.set_block(param, frame_index, block_uint, type='uint', verbose=verbose)
-          
+          video.set_block(param, frame_index, block_uint, type='uint', verbose=verbose)          
 
   #######################################################################################################
 
@@ -168,14 +175,14 @@ class GroupOfFrames:
     for name, video in self.videos.items():
       num_frames       = video.num_frames('uint')
       num_frames_video = video.video_uint.num_frames()        
-      video.video_dec.alloc(num_frames_video, video.width, video.height, 32, "444" if video.format == Format.YUV444 else "400")
-      shift_pos = self.bit_depth_pos - video.bitdepth
-      shift_att = self.bit_depth_att - video.bitdepth
+      video.video_dec.alloc(num_frames_video, video.width, video.height, 32, video.format.video_name() )      
       if verbose:
         print("  restore %10s: bit_depth_pos = %d bitdepth = %d => shift = %d " % (video.name(), self.bit_depth_pos, video.bitdepth, shift_pos))
       for frame_index in range(num_frames):
         for param in video.list_params:
           if param in ['x', 'y', 'z']:
+            bitdepth = video.bitdepth if video.bitdepth_pos[0] == 0 else video.bitdepth_pos[0]
+            shift_pos = self.bit_depth_pos - bitdepth            
             block_uint  = video.get_block(param, frame_index, type='uint', verbose=verbose).astype(np.uint32)
             block_dec   = (block_uint << shift_pos).astype(np.float32)                    
             block_src   = video.get_block(param, frame_index, type='dec', verbose=verbose).astype(np.uint32)
@@ -187,12 +194,13 @@ class GroupOfFrames:
               print("      block s/d  = ", block.flatten())
             video.set_block(param, frame_index, block, type='dec', verbose=verbose)
           elif param in ['x_add', 'y_add', 'z_add']:
+            bitdepth       = video.bitdepth if video.bitdepth_pos[1] == 0 else video.bitdepth_pos[1]            
             base           = param[0]  # 'x', 'y', or 'z'
-            video_xyz       = self.get_video_with_param( base )
+            video_xyz      = self.get_video_with_param( base )
             total_bits     = self.bit_depth_pos
             used_bits      = bd[base]
             remaining_bits = total_bits - used_bits
-            extract_bits   = min(remaining_bits, video.bitdepth)
+            extract_bits   = min(remaining_bits, bitdepth)
             shift_bits     = remaining_bits - extract_bits
             block_uint     = video.get_block(param, frame_index, type='uint', verbose=verbose).astype(np.uint32)
             block_shift    = block_uint << shift_bits    # re-align in LSB
@@ -202,12 +210,13 @@ class GroupOfFrames:
             video_xyz.set_block(base, frame_index, block_dec, type='dec', verbose=verbose)
             if verbose:
               print("    %-10s: value %2d bits = %4d: remain = %2d shift = %2d <=> value %2d bits = %4d" % (
-                    param, self.bit_depth_pos, block[0,0], remaining_bits, shift_bits, video.bitdepth, block_uint[0,0] ))    
+                    param, self.bit_depth_pos, block[0,0], remaining_bits, shift_bits, bitdepth, block_uint[0,0] ))    
               print("      block uint = ", video.get_block(param, frame_index, type='uint', verbose=verbose).astype(np.uint32).flatten())
               print("      block src  = ", block_src.flatten())
               print("      block res  = ", block_res.flatten())
               print("      block dec  = ", block_dec.flatten())
           else:
+            shift_att  = self.bit_depth_att - video.bitdepth
             block_uint  = video.get_block(param, frame_index, type='uint', verbose=verbose).astype(np.uint32)
             block_dec   = (block_uint << shift_att).astype(np.float32)
             if verbose:
@@ -244,8 +253,13 @@ class GroupOfFrames:
             for name_xyz, video_xyz in self.videos.items():
               if args_xyz in video_xyz.list_params:
                 # Extract residual blocks
-                residual_float = []
                 num_frames_xyz = video_xyz.num_frames("uint")
+                min_val, max_val = 0, 0
+                msb_bits = video_add.bitdepth_pos[0] if video_add.bitdepth_pos[0] > 0 else video_add.bitdepth
+                lsb_bits = video_add.bitdepth_pos[1] if video_add.bitdepth_pos[1] > 0 else video_add.bitdepth
+              
+                # Residual from decoded primary
+                residual_float = []
                 for frame_index in range(num_frames_xyz):
                   if verbose:
                     print("get_block %s frame = %d " % ( frame_index, frame_index))                
@@ -254,15 +268,19 @@ class GroupOfFrames:
 
                 # Flatten and normalize
                 flat = np.concatenate([b.flatten() for b in residual_float])
-                min_val = flat.min()
-                max_val = flat.max()
-                bit_max = (2 ** video_add.bitdepth) - 1
+                min_val, max_val = flat.min(), flat.max()
+                bitdepth = video_add.bitdepth if video_add.bitdepth_pos[1] == 0 else video_add.bitdepth_pos[1]
+                bit_max = (2 ** bitdepth) - 1
                 residual_uint = []
                 for b in residual_float:
                   normed = (b - min_val) / (max_val - min_val) if max_val > min_val else np.zeros_like(b)
-                  q = np.clip(normed * bit_max, 0, bit_max).astype(np.uint8 if video_add.bitdepth <= 8 else np.uint16)
+                  q = np.clip(np.round(normed * bit_max), 0, bit_max).astype(np.uint8 if video_add.bitdepth <= 8 else np.uint16)
                   residual_uint.append(q)
 
+                # Store the quantized residual blocks into video_add
+                for frame_index in range(len(residual_uint)):
+                  video_add.set_block(args_add, frame_index, residual_uint[frame_index], type="uint", verbose=verbose)
+                    
                 # Store min/max for the residual in video_add
                 for index, args in enumerate(video_add.list_params):
                   if args == args_add:
@@ -271,10 +289,6 @@ class GroupOfFrames:
                     if verbose:
                       print(f"    Set min/max for {args}: {min_val:.6f} {max_val:.6f}")
 
-                # Store the quantized residual blocks into video_add
-                for frame_index in range(len(residual_uint)):
-                  video_add.set_block(args_add, frame_index, residual_uint[frame_index], type="uint", verbose=verbose)
-
   #######################################################################################################
 
   def dequantize(self, verbose=False):
@@ -282,7 +296,7 @@ class GroupOfFrames:
     for name, video in self.videos.items():
       video.dequantize(verbose=verbose)
 
-    for args_add in ['x_add', 'y_add', 'z_add']:        
+    for args_add in ['x_add', 'y_add', 'z_add']: 
       if verbose:
         print("Dequantize residuals %s " % (args_add))
       for name_add, video_add in self.videos.items():
@@ -292,18 +306,20 @@ class GroupOfFrames:
           args_xyz = args_add[0]
           for name_xyz, video_xyz in self.videos.items():
             if args_xyz in video_xyz.list_params:
-
+              num_frames = video_add.num_frames("uint")
+              msb_bits   = video_add.bitdepth_pos[0] if video_add.bitdepth_pos[0] > 0 else video_add.bitdepth
+              lsb_bits   = video_add.bitdepth_pos[1] if video_add.bitdepth_pos[1] > 0 else video_add.bitdepth
+           
               # Extract residual uint blocks
               residual_uint = []
-              num_frames = video_add.num_frames("uint")
               for frame_index in range(num_frames):
                 block = video_add.get_block(args_add, frame_index, type="uint", verbose=verbose)
                 residual_uint.append(block)
 
               # Dequantize residuals
-              bit_max = (2 ** video_add.bitdepth) - 1
-              min_val = 0.0
-              max_val = 0.0
+              bitdepth = video_add.bitdepth if video_add.bitdepth_pos[1] == 0 else video_add.bitdepth_pos[1]
+              bit_max = (2 ** bitdepth) - 1
+              min_val, max_val = 0.0, 0.0 
               for index, args in enumerate(video_add.list_params):         
                 if args == args_add:
                   min_val = video_add.min[index]
@@ -323,7 +339,167 @@ class GroupOfFrames:
                 video_xyz.set_block(args_xyz, frame_index, updated, type="dec", verbose=verbose)
 
   #######################################################################################################      
+  
+  def rgb2yuv(self, verbose=False):    
+    for name, video in self.videos.items():
+      if video.sh_conversion != ColorStandard.NONE:
+        print(f"  rgb2yuv: sh_conversion = %s " % ( video.sh_conversion.name ))
+        num_frames = video.num_frames('uint')
+        for frame_index in range(num_frames):
+          if verbose: 
+            print("    list params = ", video.list_params)
+          for i, id in enumerate(video.list_params):
+            print("    id = %s " % (  id ))
+            f, x, y, c = video.get_pack_position(i)
+            if id.startswith('f_dc'):
+              rest_num = int(id.split('_')[-1])
+              if rest_num == 0:
+                block_r = video.get_block('f_dc_0', frame_index, type='uint', verbose=verbose)
+                block_g = video.get_block('f_dc_1', frame_index, type='uint', verbose=verbose)
+                block_b = video.get_block('f_dc_2', frame_index, type='uint', verbose=verbose)
+                block_y, block_cb, block_cr = video.sh_conversion.rgb2yuv_uint16(block_r, block_g, block_b, video.bitdepth)
+                video.set_block('f_dc_0', frame_index, block_y, type='uint', verbose=verbose)
+                video.set_block('f_dc_1', frame_index, block_cb, type='uint', verbose=verbose)
+                video.set_block('f_dc_2', frame_index, block_cr, type='uint', verbose=verbose)
+            elif id.startswith('f_rest'):
+              rest_num = int(id.split('_')[-1])
+              if rest_num // 15 == 0:
+                block_r = video.get_block(f'f_rest_{rest_num}', frame_index, type='uint', verbose=verbose)
+                block_g = video.get_block(f'f_rest_{rest_num + 15}', frame_index, type='uint', verbose=verbose)
+                block_b = video.get_block(f'f_rest_{rest_num + 30}', frame_index, type='uint', verbose=verbose)
+                block_y, block_cb, block_cr = video.sh_conversion.rgb2yuv_uint16(block_r, block_g, block_b, video.bitdepth)
+                y_num = rest_num
+                cb_num = rest_num + 15
+                cr_num = rest_num + 30
+                video.set_block(f'f_rest_{y_num}', frame_index, block_y, type='uint', verbose=verbose)
+                video.set_block(f'f_rest_{cb_num}', frame_index, block_cb, type='uint', verbose=verbose)
+                video.set_block(f'f_rest_{cr_num}', frame_index, block_cr, type='uint', verbose=verbose)
 
+  ####################################################################################################### 
+  
+  def yuv2rgb(self, verbose=False):
+    for name, video in self.videos.items():
+      if video.sh_conversion != ColorStandard.NONE:
+        print(f"  yuv2rgb: sh_conversion = %s " % ( video.sh_conversion.name ))
+        num_frames = video.num_frames('uint')
+        for frame_index in range(num_frames):
+          if verbose: 
+            print("    list params = ", video.list_params)
+          for i, id in enumerate(video.list_params):
+            print("    id = %s " % (  id ))
+            f, x, y, c = video.get_pack_position(i)
+            if id.startswith('f_dc'):
+              rest_num = int(id.split('_')[-1])
+              if rest_num == 0:
+                block_y = video.get_block('f_dc_0', frame_index, type='uint', verbose=verbose)
+                block_cb = video.get_block('f_dc_1', frame_index, type='uint', verbose=verbose)
+                block_cr = video.get_block('f_dc_2', frame_index, type='uint', verbose=verbose)
+                block_r, block_g, block_b = video.sh_conversion.yuv2rgb_uint16(block_y, block_cb, block_cr, video.bitdepth )
+                video.set_block(f'f_dc_0', frame_index, block_r, type='uint', verbose=verbose)
+                video.set_block(f'f_dc_1', frame_index, block_g, type='uint', verbose=verbose)
+                video.set_block(f'f_dc_2', frame_index, block_b, type='uint', verbose=verbose)
+            elif id.startswith('f_rest'):
+              rest_num = int(id.split('_')[-1])
+              if verbose:
+                print("    rest_num = %d " % ( rest_num ))
+              if rest_num // 15 == 0:
+                block_y = video.get_block(f'f_rest_{rest_num}', frame_index, type='uint', verbose=verbose)
+                block_cb = video.get_block(f'f_rest_{rest_num + 15}', frame_index, type='uint', verbose=verbose)
+                block_cr = video.get_block(f'f_rest_{rest_num + 30}', frame_index, type='uint', verbose=verbose)
+                block_r, block_g, block_b = video.sh_conversion.yuv2rgb_uint16(block_y, block_cb, block_cr, video.bitdepth)
+                y_num = rest_num
+                cb_num = rest_num + 15
+                cr_num = rest_num + 30
+                video.set_block(f'f_rest_{y_num}', frame_index, block_r, type='uint', verbose=verbose)
+                video.set_block(f'f_rest_{cb_num}', frame_index, block_g, type='uint', verbose=verbose)
+                video.set_block(f'f_rest_{cr_num}', frame_index, block_b, type='uint', verbose=verbose)
+
+  #######################################################################################################      
+
+  def subsample(self, verbose=False):
+    for atlas_id, video in self.videos.items():
+      num_frames = video.num_frames('uint')
+      if video.format == Format.YUV420:
+        for frame_index in range(num_frames):
+          U, V = video.video_uint.c(frame_index, 1), video.video_uint.c(frame_index, 2)
+          if video.subsampling == 0:
+            continue
+          elif video.subsampling == 1:
+            U2 = self.subsample_drop(U)
+            V2 = self.subsample_drop(V)
+          elif video.subsampling == 2:
+            U2 = self.subsample_average(U)
+            V2 = self.subsample_average(V)
+
+          # Replace the entire frame with subsampled data
+          Y = video.video_uint.c(frame_index, 0)
+          video.video_uint.frames[frame_index] = (Y, U2, V2)
+
+  ####################################################################################################### 
+
+  def subsample_average(self, data):
+    h, w = data.shape
+    # Crop to even size (remove last row/column)
+    h_even = h - (h % 2)
+    w_even = w - (w % 2)
+    data = data[:h_even, :w_even]
+    # Subsample using 2x2 block average
+    return data.reshape(h_even//2, 2, w_even//2, 2).mean(axis=(1, 3))
+  
+  ####################################################################################################### 
+
+  def subsample_drop(self, data):
+    return data[::2, ::2]
+  
+  ####################################################################################################### 
+  
+  def upsample(self, verbose=False):
+    for atlas_id, video in self.videos.items():
+      if video.format == Format.YUV420:
+        num_frames = video.num_frames('uint')
+        for frame_index in range(num_frames):
+          U, V = video.video_uint.c(frame_index, 1), video.video_uint.c(frame_index, 2)
+          U2 = self.upsample_b_3_6(U, video.bitdepth)
+          V2 = self.upsample_b_3_6(V, video.bitdepth)
+          # Replace the entire frame with upsampled data
+          Y = video.video_uint.c(frame_index, 0)
+          video.video_uint.frames[frame_index] = (Y, U2, V2)
+
+  ######################################################################################################
+  def upsample_b_3_6(self, data, bitdepth):
+    # ISO/IEC 23090-5 B.3.6 4-tap x 4-tap filter for 4:2:0 to 4:4:4 upsampling
+    c = data.astype(np.int32)
+    hc, wc = c.shape
+    max_val = (1 << bitdepth) - 1
+
+    # Horizontal 2x upsampling
+    # Pad with edge values (2 columns on each side)
+    px = np.pad(c, ((0, 0), (2, 2)), mode='edge')
+    
+    # Even columns: simple copy x16, Odd columns: -1 9 9 -1 filter
+    even_cols = 16 * c
+    odd_cols = (-px[:, 1:-3] + 9*px[:, 2:-2] + 9*px[:, 3:-1] - px[:, 4:])
+    
+    h_up = np.empty((hc, wc * 2), dtype=np.int32)
+    h_up[:, 0::2] = even_cols
+    h_up[:, 1::2] = odd_cols
+
+    # Vertical 2x upsampling
+    py = np.pad(h_up, ((2, 2), (0, 0)), mode='edge')
+    
+    even_rows = 16 * h_up
+    odd_rows = (-py[1:-3] + 9*py[2:-2] + 9*py[3:-1] - py[4:])
+    
+    out = np.empty((hc * 2, wc * 2), dtype=np.int32)
+    out[0::2] = even_rows
+    out[1::2] = odd_rows
+
+    # Normalize (+128)>>8 and clip
+    out = (out + 128) >> 8
+    out = np.clip(out, 0, max_val).astype(np.float32)
+    return out
+
+  #######################################################################################################
   def num_frames(self, type):
     for idx, (_, video) in enumerate(self.videos.items()):      
       return video.num_frames(type)
