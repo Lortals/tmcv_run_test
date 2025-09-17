@@ -121,6 +121,9 @@ def parse_args():
                                                  '  - 709: BT. 709 \n'
                                                  '  - 2020: BT. 2020 \n',             default='0',            type=str, choices=['0', '601', '709', '2020'])
 
+  main = parser.add_argument_group('Bitstream')
+  main.add_argument('--add_camera_position_sei', help='Add camera position SEI message', default=False, action='store_true')
+   
   main = parser.add_argument_group('Plot and traces')        
   main.add_argument('-v','--verbose',       help='Verbose',                           default=False,          action='store_true')
   main.add_argument('--decode_only',        help='Decode only',                       default=False,          action='store_true')
@@ -286,8 +289,12 @@ if __name__ == '__main__':
       if args.verbose:
         print("Frame %2d: " % (args.first_frame + frame_index))
         for type, video in gof_enc.videos.items():
-          print("  Video %10s: %4d x %4d grid = %3d %3d x %2d %2d num frame = %d " %  
-            (type.name, video.width, video.height, gof_enc.block_width, gof_enc.block_height, video.grid_width, video.grid_height, video.video_src.num_frames() ) )           
+          print("  Video src: %10s: %4d x %4d grid = %3d %3d x %2d %2d format = %s frame = %d dim = %d x %d / %d x %d " %  
+            (type.name, video.width, video.height, gof_enc.block_width, gof_enc.block_height, video.grid_width, video.grid_height, 
+             video.format, video.video_src.num_frames(),
+             video.video_src.frames[0][0].shape[0], video.video_src.frames[0][0].shape[1], 
+             video.video_src.frames[0][1].shape[0] if video.video_src.frames[0][1] is not None else 0,
+             video.video_src.frames[0][1].shape[1] if video.video_src.frames[0][1] is not None else 0) )          
 
     # Quantize videos
     if gof_enc.bit_depth_pos == 32 and gof_enc.bit_depth_att == 32:
@@ -304,8 +311,12 @@ if __name__ == '__main__':
     # Verbose
     if args.verbose:
       for type, video in gof_enc.videos.items():
-        print("  Video %10s: %4d x %4d grid = %3d %3d x %2d %2d num frame = %d " %  
-          (type.name, video.width, video.height, gof_enc.block_width, gof_enc.block_height, video.grid_width, video.grid_height, video.video_src.num_frames() ) ) 
+        print("  Video enc: %10s: %4d x %4d grid = %3d %3d x %2d %2d format = %s frame = %2d dim = %d x %d / %d x %d " %  
+          (type.name, video.width, video.height, gof_enc.block_width, gof_enc.block_height, video.grid_width, video.grid_height, 
+           video.format.name, video.video_src.num_frames(),  
+           video.video_uint.frames[0][0].shape[0], video.video_uint.frames[0][0].shape[1], 
+           video.video_uint.frames[0][1].shape[0] if video.video_uint.frames[0][1] is not None else 0,
+           video.video_uint.frames[0][1].shape[1] if video.video_uint.frames[0][1] is not None else 0) ) 
 
     # Encode video in parallel
     if args.verbose:
@@ -333,7 +344,7 @@ if __name__ == '__main__':
       print('All videos encoded.') 
 
     # Save V3C bitstream
-    gof_enc.save( args.bin, bitstream_log=bool(args.bitstream_log), verbose=args.verbose )
+    gof_enc.save( args.bin, bitstream_log=bool(args.bitstream_log), add_camera_position_sei=args.add_camera_position_sei, verbose=args.verbose )
     if args.verbose:
       gof_enc.print( "enc" )
   

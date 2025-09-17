@@ -418,8 +418,11 @@ class GroupOfFrames:
 
   def subsample(self, verbose=False):
     for atlas_id, video in self.videos.items():
-      num_frames = video.num_frames('uint')
-      if video.format == Format.YUV420:
+      if video.format == Format.YUV420:            
+        num_frames = video.video_uint.num_frames() 
+        if verbose:
+          print("Subsampling video %s format = %s subsampling = %d num_frames = %d " % (atlas_id, video.format.name, video.subsampling, num_frames))
+          video.video_uint.print("Before subsampling")
         for frame_index in range(num_frames):
           U, V = video.video_uint.c(frame_index, 1), video.video_uint.c(frame_index, 2)
           if video.subsampling == 0:
@@ -430,22 +433,23 @@ class GroupOfFrames:
           elif video.subsampling == 2:
             U2 = self.subsample_average(U)
             V2 = self.subsample_average(V)
-
-          # Replace the entire frame with subsampled data
           Y = video.video_uint.c(frame_index, 0)
           video.video_uint.frames[frame_index] = (Y, U2, V2)
+        if verbose:          
+          video.video_uint.print("After subsampling")
 
   ####################################################################################################### 
 
   def subsample_average(self, data):
     h, w = data.shape
-    # Crop to even size (remove last row/column)
-    h_even = h - (h % 2)
-    w_even = w - (w % 2)
-    data = data[:h_even, :w_even]
-    # Subsample using 2x2 block average
-    return data.reshape(h_even//2, 2, w_even//2, 2).mean(axis=(1, 3))
-  
+    if h % 2 != 0 or w % 2 != 0:
+        raise ValueError(f"Subsample average requires even dimensions, got ({h}, {w})")
+
+    arr = np.ascontiguousarray(data)
+    out = arr.reshape(h//2, 2, w//2, 2).mean(axis=(1, 3))
+
+    return out.astype(data.dtype)
+
   ####################################################################################################### 
 
   def subsample_drop(self, data):
@@ -456,7 +460,7 @@ class GroupOfFrames:
   def upsample(self, verbose=False):
     for atlas_id, video in self.videos.items():
       if video.format == Format.YUV420:
-        num_frames = video.num_frames('uint')
+        num_frames = video.video_uint.num_frames() 
         for frame_index in range(num_frames):
           U, V = video.video_uint.c(frame_index, 1), video.video_uint.c(frame_index, 2)
           U2 = self.upsample_b_3_6(U, video.bitdepth)
@@ -520,7 +524,7 @@ class GroupOfFrames:
 
   #######################################################################################################
 
-  def save(self, path='', bitstream_log=False, verbose=False):      
+  def save(self, path='', bitstream_log=False, add_camera_position_sei=True, verbose=False):      
     ssvu = SampleStreamV3CUnit()
 
     if verbose:
@@ -554,7 +558,7 @@ class GroupOfFrames:
     if self.bit_depth_pos != 32 or self.bit_depth_att != 32 :
       sei.append( Sei.create( SeiPayloadType.DEQUANTIZATION_MAPPING_REGISTERED ) )   
     sei.append( Sei.create( SeiPayloadType.GSC_REGISTERED ) )    
-    if self.camera_df is not None and not self.camera_df.empty:
+    if add_camera_position_sei and self.camera_df is not None and not self.camera_df.empty:
       sei.append( Sei.create( SeiPayloadType.INPUT_CAMERA_INFORMATION ) )
 
     # Store SEI message into SEI RBSP 

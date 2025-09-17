@@ -117,7 +117,7 @@ class VideoData:
 
   #######################################################################################################
 
-  def num_frames(self, type ):
+  def num_frames(self, type, verbose=False):
     video = { "src": self.video_src, "uint": self.video_uint, "dec": self.video_dec, "res": self.video_res }.get(type)    
     num_params = len(self.list_params)
     total_frames = video.num_frames()
@@ -131,6 +131,9 @@ class VideoData:
         result = total_frames // num_params
     else: 
       result = total_frames 
+    if verbose:
+      print("num_frames: %4s %-6s %-8s total = %3d params = %3d => frames = %3d " % (type, self.format.name, self.packing.name, 
+        total_frames, num_params, result))
     return result
 
   #######################################################################################################

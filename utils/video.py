@@ -208,28 +208,33 @@ class Video:
   #######################################################################################################
 
   def print(self, name=""):
-    dim = 8
-    print("VIDEO: %s frame = %d dim = %d x %d %d bits format = %s md5 = %s dtype = " %
-        (name, self.num_frames(), self.width, self.height, self.bits, self.format, self.md5()), self.frames[0][0].dtype)
-    sys.stdout.flush()
+    dimx, dimy = 8, 4
+    print("VIDEO: %s frame = %d dim = %d x %d (%d x %d and %d x %d ) %d bits format = %s md5 = %s dtype = " %
+        (name, self.num_frames(), self.width, self.height, 
+        self.frames[0][0].shape[1], self.frames[0][0].shape[0], 
+        self.frames[0][1].shape[1] if self.frames[0][1] is not None else 0,
+        self.frames[0][1].shape[0] if self.frames[0][1] is not None else 0,
+        self.bits, self.format, self.md5()), self.frames[0][0].dtype)
     for f in range(self.num_frames()):
-
-      print("%-10s j =   : " % ' ', end=' ')
-      for j in range(min(dim, self.width)):
+      print("%-10s j =   : " % ' ', end=' ')      
+      for j in range(min(dimx, self.width)):
         print(f'{j:6d}', end=' ')
-      print(end='\n')    
-      for i in range(min(dim, self.height)):
-        print("%-10s i = %4d: " % (' ' if j != 0 else ('F%04d' % f), i), end=' ') 
-        for j in range(min(dim, self.width)):
-          print(f'{self.frames[f][0][i][j]:6.2f}', end=' ')
+      print(" frame %d dim = %d x %d / %d x %d " % (f, 
+          self.frames[f][0].shape[1], self.frames[f][0].shape[0],
+          self.frames[f][1].shape[1] if self.frames[f][1] is not None else 0,
+          self.frames[f][1].shape[0] if self.frames[f][1] is not None else 0))
 
+      for i in range(min(dimy, self.height)):
+        print("%-10s i = %4d: " % (' ' if j != 0 else ('F%04d' % f), i), end=' ') 
+        for j in range(min(dimx, self.width)):
+          print(f'{self.frames[f][0][i][j]:6.2f}', end=' ')
         if self.frames[f][1] is not None:
           print("  ", end=' ') 
-          for j in range(min(dim, self.width)):
+          for j in range(min(dimx, self.width)):
             print(f'{self.frames[f][1][i][j]:6.2f}', end=' ')
         if self.frames[f][2] is not None:
           print("  ", end=' ') 
-          for j in range(min(dim, self.width)):
+          for j in range(min(dimx, self.width)):
             print(f'{self.frames[f][2][i][j]:6.2f}', end=' ')
         print(end='\n')
 
