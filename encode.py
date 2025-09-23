@@ -161,9 +161,16 @@ def parse_args():
   else:
     bistream_name = args.bin
   
-  if ( args.bit_depth_pos != 32 or args.bit_depth_att != 32 ) and args.trans_position == 1:
-    args.trans_position = 0
-    print("Check: disable trans_position because bit_depth_pos or bit_depth_att != 32")
+  if ( args.bit_depth_pos != 32 or args.bit_depth_att != 32 ):
+    if args.trans_position != 0:
+      args.trans_position = 0
+      print("Check: disable trans_position because bit_depth_pos or bit_depth_att != 32")
+    if args.src_sh_conversion != '0':
+      args.src_sh_conversion = '0'
+      print("Check: disable trans_position because src_sh_conversion != 0")
+    if args.sh_conversion != '0':
+      args.sh_conversion = '0'
+      print("Check: disable trans_position because sh_conversion != 0")
   return args
 
 #######################################################################################################

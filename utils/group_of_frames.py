@@ -81,7 +81,7 @@ class GroupOfFrames:
     for param in ['x', 'y', 'z']:
       for video in self.videos.values():
         if param in video.list_params:
-          bd[param] = video.bitdepth if self.bit_depth_pos[0] == 0 else self.bit_depth_pos[0]
+          bd[param] = video.bitdepth # if self.bit_depth_pos == 0 else self.bit_depth_pos
           break
       else:
         bd[param] = 0
@@ -114,7 +114,7 @@ class GroupOfFrames:
       video.video_uint.alloc(num_frames_video, video.width, video.height, video.bitdepth, video.format.video_name() )      
       
       if verbose:
-        print("  reduce %10s: bit_depth_pos = %d bitdepth = %d = shift  = %d " % (video.name(), self.bit_depth_pos,  video.bitdepth, shift_pos))
+        print("  reduce %10s: bit_depth_pos = %d bitdepth = %d" % (video.name(), self.bit_depth_pos,  video.bitdepth))
 
       for frame_index in range(num_frames):
         for param in video.list_params:
@@ -137,6 +137,9 @@ class GroupOfFrames:
             total_bits      = self.bit_depth_pos
             used_bits       = bd[base]                # Stored in MSB
             remaining_bits  = total_bits - used_bits  # Must be store in LSB            
+            if verbose:
+              print("    %-10s: value %2d bits = %4d: remain = %2d  " % (
+                      param, total_bits, full_block[0,0], remaining_bits ))   
             if remaining_bits <= 0:
               block_uint = np.zeros_like(full_block, dtype=np.uint16)
               if verbose:
@@ -148,9 +151,6 @@ class GroupOfFrames:
               block_uint   = full_block_uint & mask                            
               block_uint   = block_uint >> shift_bits           
               block_uint   = block_uint.astype(np.uint8 if video.bitdepth <= 8 else np.uint16)
-              if verbose:
-                print("    %-10s: value %2d bits = %4d: remain = %2d shift = %2d <=> value %2d bits = %4d" % (
-                      param, self.bit_depth_pos, full_block[0,0], remaining_bits, shift_bits, bitdepth, block_uint[0,0] ))                      
               print("      block src  = ", full_block_uint.flatten())
               print("      block uint = ", block_uint.flatten())
           else:
@@ -177,16 +177,14 @@ class GroupOfFrames:
       num_frames_video = video.video_uint.num_frames()        
       video.video_dec.alloc(num_frames_video, video.width, video.height, 32, video.format.video_name() )      
       if verbose:
-        print("  restore %10s: bit_depth_pos = %d bitdepth = %d => shift = %d " % (video.name(), self.bit_depth_pos, video.bitdepth, shift_pos))
+        print("  restore %10s: bit_depth_pos = %d bitdepth = %d " % (video.name(), self.bit_depth_pos, video.bitdepth))
       for frame_index in range(num_frames):
         for param in video.list_params:
           if param in ['x', 'y', 'z']:
             bitdepth = video.bitdepth if video.bitdepth_pos[0] == 0 else video.bitdepth_pos[0]
-            shift_pos = self.bit_depth_pos - bitdepth            
-            block_uint  = video.get_block(param, frame_index, type='uint', verbose=verbose).astype(np.uint32)
-            block_dec   = (block_uint << shift_pos).astype(np.float32)                    
-            block_src   = video.get_block(param, frame_index, type='dec', verbose=verbose).astype(np.uint32)
-            block       = block_dec + block_src
+            shift_pos  = self.bit_depth_pos - bitdepth            
+            block_uint = video.get_block(param, frame_index, type='uint', verbose=verbose).astype(np.uint32)
+            block       = (block_uint << shift_pos).astype(np.float32)
             if verbose:
               print("    %-10s: value %2d bits = %4d >> %2d <=> value %2d bits = %4d" % ( 
                                   param, self.bit_depth_pos, block[0,0], shift_pos, video.bitdepth, block_uint[0,0]))
