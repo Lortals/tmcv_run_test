@@ -20,6 +20,7 @@ class Sei():
 
   #######################################################################################################
 
+  @staticmethod
   def create(sei_payload_type: SeiPayloadType, *args, **kwargs) -> "Sei":
     from utils.v3c.sei.component_codec_mapping            import SeiComponentCodecMapping
     from utils.v3c.sei.gsc_registered                     import SeiGscRegistered
@@ -33,9 +34,9 @@ class Sei():
       SeiPayloadType.DEQUANTIZATION_MAPPING_REGISTERED: SeiDequantizationMappingRegistered,
       SeiPayloadType.INPUT_CAMERA_INFORMATION:          SeiInputCameraInformation,
     }
-    sei_class = sei_map.get(sei_payload_type )
+    sei_class = sei_map.get(sei_payload_type)
     if sei_class is None:
         raise ValueError(f"SEI payload type {sei_payload_type} not supported")
     return sei_class( *args, **kwargs)
 
-#######################################################################################################
+####################################################################################################### 

@@ -1,4 +1,4 @@
-from utils.v3c.type    import NalUnitType, SeiPayloadType, Quantization, V3CUnitType, Format
+from utils.v3c.type    import NalUnitType, SeiPayloadType, Quantization, V3CUnitType
 from utils.v3c.sei.sei import Sei
 
 #######################################################################################################
@@ -18,7 +18,7 @@ class SeiDequantizationMappingRegistered(Sei):
     if dtm_dequantize_type_cancel_flag == 0:
       dtm_dequantize_type_mappings_count_minus1 = len( gof.videos) - 1
       bitstream.write_bits(dtm_dequantize_type_mappings_count_minus1, 8)      # u(8)
-      for i, (_, video) in enumerate( gof.videos.items()):
+      for _, (_, video) in enumerate( gof.videos.items()):
         dtm_video_type_id         = video.type.value
         dtm_bitdepth              = video.bitdepth
         dtm_quantization_type     = video.quantization.value
@@ -45,7 +45,7 @@ class SeiDequantizationMappingRegistered(Sei):
     dtm_dequantize_type_cancel_flag = bitstream.read_bits(1)                  # u(1)
     if dtm_dequantize_type_cancel_flag == 0:
       dtm_dequantize_type_mappings_count_minus1 = bitstream.read_bits(8)      # u(8)
-      for i in range(dtm_dequantize_type_mappings_count_minus1 + 1):
+      for _ in range(dtm_dequantize_type_mappings_count_minus1 + 1):
         dtm_video_type_id         = bitstream.read_bits(5)                    # u(5)
         dtm_bitdepth              = bitstream.read_bits(5)                    # u(5)
         dtm_quantization_type     = bitstream.read_bits(5)                    # u(5)
@@ -61,15 +61,15 @@ class SeiDequantizationMappingRegistered(Sei):
         gof.videos[type].center       = [0.0] * (dtm_num_components_minus1 + 1)
         gof.videos[type].sigma        = [0.0] * (dtm_num_components_minus1 + 1)
         for j in range(dtm_num_components_minus1 + 1 ):
-            dtm_min_value = bitstream.read_float()                            # f(32)
-            dtm_max_value = bitstream.read_float()                            # f(32)
-            gof.videos[type].min[j] = dtm_min_value
-            gof.videos[type].max[j] = dtm_max_value            
-            print("Read min max %s = %8.6f %8.6f  " % ( gof.videos[type].name(), gof.videos[type].min[j], gof.videos[type].max[j]))
-            if gof.videos[type].quantization == Quantization.GAUSSIAN:
-                dtm_center_value = bitstream.read_float()                     # f(32)
-                dtm_signa_value  = bitstream.read_float()                     # f(32)
-                gof.videos[type].center[j] = dtm_center_value
-                gof.videos[type].sigma[j]  = dtm_signa_value
+          dtm_min_value = bitstream.read_float()                              # f(32)
+          dtm_max_value = bitstream.read_float()                              # f(32)
+          gof.videos[type].min[j] = dtm_min_value
+          gof.videos[type].max[j] = dtm_max_value            
+          print("Read min max %s = %8.6f %8.6f  " % ( gof.videos[type].name(), gof.videos[type].min[j], gof.videos[type].max[j]))
+          if gof.videos[type].quantization == Quantization.GAUSSIAN:
+            dtm_center_value = bitstream.read_float()                         # f(32)
+            dtm_signa_value  = bitstream.read_float()                         # f(32)
+            gof.videos[type].center[j] = dtm_center_value
+            gof.videos[type].sigma[j]  = dtm_signa_value
 
 #######################################################################################################

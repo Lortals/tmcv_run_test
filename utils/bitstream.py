@@ -1,9 +1,9 @@
 import struct
 import hashlib
-from bitarray import bitarray
-import numpy as np 
 import inspect
 import re
+from bitarray import bitarray
+import numpy as np 
 
 #######################################################################################################
 
@@ -15,7 +15,7 @@ class Bitstream:
     self.bits = bitarray(endian="big")
     self.bits.frombytes(data)
     self.bit_pos = 0  
-    self.bitstream_log = bool(bitstream_log)
+    self.bitstream_log = bool(bitstream_log) 
   
   #######################################################################################################
 
@@ -87,7 +87,7 @@ class Bitstream:
       self.bitstream_log = False
     data = other.bits.tobytes()
     for i in range( start, start + size):
-        self.write_bits( data[i], 8 )
+      self.write_bits( data[i], 8 )
     if bitstream_log:
       print("copy bitstream size = %d " % size )
       self.bitstream_log = bitstream_log
@@ -100,7 +100,7 @@ class Bitstream:
       print("copy bitstream size = %d / %d " % ( size, len(other.bits) ) )
     data = bytearray(size)
     for i in range(size):
-        data[i] = self.read_bits(8)
+      data[i] = self.read_bits(8)
     other.from_bytes(bytes(data))
     if bitstream_log:
       print("copy bitstream size = %d / %d " % ( size, len(other.bits) ) )
@@ -117,12 +117,13 @@ class Bitstream:
   def write_length_alignment(self):
     zero = 0
     while not self.byte_aligned():
-      self.write_bits(0, 1);                                  # f(1): equal to 0
+      self.write_bits(zero, 1);                                  # f(1): equal to 0
 
   def read_length_alignment(self):
+    zero = 0
     while not self.byte_aligned():
-      self.write_bits(0, 1);                                  # f(1): equal to 0
-      
+      self.write_bits(zero, 1);                                  # f(1): equal to 0
+
   #######################################################################################################
 
   def write_byte_alignment(self):
@@ -162,7 +163,7 @@ class Bitstream:
       if m:
         raw = m.group(1).strip()
         return re.sub(r'^(?:self|other|gof)\.', '', raw)
-    except Exception:
+    except Exception as exc:
         pass
     return ''
 
@@ -175,21 +176,21 @@ class Bitstream:
       if m:
         raw = m.group(1).strip()
         return re.sub(r'^(?:self|other|gof)\.', '', raw)
-    except Exception:
+    except Exception as exc:
       pass
     return ''
 
   def __log_bits(self, name, value, n ):
-      print("[%8d:%1d] CodU[%2d] %-30s = %12d " % (self.bit_pos / 8, self.bit_pos % 8, n, name, value ) )
+    print("[%8d:%1d] CodU[%2d] %-30s = %12d " % (self.bit_pos / 8, self.bit_pos % 8, n, name, value ) )
 
   def __log_string(self, name, value ):
-      print("[%8d:%1d] CodStr   %-30s = %-s " % ( self.bit_pos / 8, self.bit_pos % 8, name, value ) )
+    print("[%8d:%1d] CodStr   %-30s = %-s " % ( self.bit_pos / 8, self.bit_pos % 8, name, value ) )
 
   def __log_float(self, name, value ):
-      print("[%8d:%1d] CodFloat %-30s = %12f " % ( self.bit_pos / 8, self.bit_pos % 8, name, value ) )
+    print("[%8d:%1d] CodFloat %-30s = %12f " % ( self.bit_pos / 8, self.bit_pos % 8, name, value ) )
 
   def __log_uvlc(self, name, value ):
-      print("[%8d:%1d] CodUvlc  %-30s = %12d " % ( self.bit_pos / 8, self.bit_pos % 8, name, value ) )
+    print("[%8d:%1d] CodUvlc  %-30s = %12d " % ( self.bit_pos / 8, self.bit_pos % 8, name, value ) )
 
   #######################################################################################################
   # Bits
@@ -339,17 +340,17 @@ class Bitstream:
   # Buffer witht size
 
   def write_buffer_with_size(self, buffer):
-      if not self.byte_aligned():
-          self.write_bits(0, 8 - (self.bit_pos % 8))
-      self.write_bits(len(buffer), 32)   
-      ba = bitarray(endian="big")
-      ba.frombytes(bytes(buffer))
-      bit_start = self.bit_pos
-      bit_end = bit_start + len(ba)
-      if bit_end > len(self.bits):
-          self.bits.extend([0] * (bit_end - len(self.bits)))
-      self.bits[bit_start:bit_end] = ba
-      self.bit_pos = bit_end
+    if not self.byte_aligned():
+      self.write_bits(0, 8 - (self.bit_pos % 8))
+    self.write_bits(len(buffer), 32)   
+    ba = bitarray(endian="big")
+    ba.frombytes(bytes(buffer))
+    bit_start = self.bit_pos
+    bit_end = bit_start + len(ba)
+    if bit_end > len(self.bits):
+      self.bits.extend([0] * (bit_end - len(self.bits)))
+    self.bits[bit_start:bit_end] = ba
+    self.bit_pos = bit_end
 
   def read_buffer_with_size(self):
     if not self.byte_aligned():
@@ -372,7 +373,7 @@ class Bitstream:
     bit_start = self.bit_pos
     bit_end = bit_start + len(ba)
     if bit_end > len(self.bits):
-        self.bits.extend([0] * (bit_end - len(self.bits)))
+      self.bits.extend([0] * (bit_end - len(self.bits)))
     self.bits[bit_start:bit_end] = ba
     self.bit_pos = bit_end
 

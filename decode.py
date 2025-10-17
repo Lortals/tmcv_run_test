@@ -6,13 +6,12 @@ import concurrent.futures
 from utils.common           import handler_ctrl_c, remove_extension, print_args, create_output_dir
 from utils.group_of_frames  import GroupOfFrames
 from utils.video_codec      import decode_video
-from utils.v3c.type         import Format, ColorStandard
+from utils.v3c.type         import ColorStandard
 
 #######################################################################################################
 
 # Parse input arguments
 def parse_args():
-  global parser 
   parser = argparse.ArgumentParser(
     description='Decode 3DGS point cloud from v3C bitstream',
     epilog='Example: \n' + '  ./' + os.path.basename(__file__) + ' -b file.v3c -d %04d_dec.ply \n',
@@ -32,11 +31,11 @@ def parse_args():
 
   try:
     args = parser.parse_args()
-  except:
-    sys.exit(0)    
+  except Exception as exc:
+    raise RuntimeError("Argument parsing failed") from exc     
   if args.verbose:
     print_args(parser, args)
-  return args
+  return args 
 
 #######################################################################################################
 
@@ -88,11 +87,8 @@ if __name__ == '__main__':
   gof_dec.yuv2rgb(verbose=args.verbose)
 
   # Dequantize  
-  if gof_dec.bit_depth_pos == 32 and gof_dec.bit_depth_att == 32:
-    gof_dec.dequantize(verbose=args.verbose)
-  else:
-    gof_dec.restore_bitdepth(verbose=args.verbose)
-
+  gof_dec.dequantize(verbose=args.verbose)
+  
   # Verbose
   if args.verbose:
     gof_dec.print( "dec" )
@@ -106,6 +102,10 @@ if __name__ == '__main__':
     # Dec color conversion
     if gof_dec.src_sh_conversion != ColorStandard.NONE:
       dec.yuv2rgb(gof_dec.src_sh_conversion, verbose=args.verbose)
+
+    # Quaternion denormalization
+    if not 'rot_0' in [p for v in gof_dec.videos.values() for p in getattr(v, "list_params", None)]:
+      dec.reconstruct_quat(verbose=args.verbose)      
 
     # Save decoded pointcloud    
     dec.write(args.dec if args.dec != '' else ( remove_extension(args.bin) + '_%04d_dec.ply'), 

@@ -1,0 +1,6 @@
+[FORMAT]
+max-line-length=140
+indent-string='  '
+
+[MESSAGES CONTROL]
+disable=C0209,C0116,C0114,C0115,C0301,C0303,R0903,W0613,W0621,W0622

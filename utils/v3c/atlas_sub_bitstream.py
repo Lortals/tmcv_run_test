@@ -21,22 +21,22 @@ class AtlasSubBitstream():
 
   def get_nal_unit_count(self):
     return len(self.nal_units)  
-    
+     
   #######################################################################################################
   
   def __compute_unit_size_precision_bytes_minus1(self, forced_prec = 1):
-      max_size = 0
-      for unit in self.nal_units:
-        size = unit.get_size()
-        if size > max_size:
-          max_size = size
-      if max_size > 0:
-        bits = math.ceil(math.log2(max_size))
-      else:
-        bits = 0
-      precision = max(math.ceil(bits / 8.0), 1)
-      precision = min(max(precision, forced_prec), 8)
-      self.unit_size_precision_bytes_minus1 = precision - 1   
+    max_size = 0
+    for unit in self.nal_units:
+      size = unit.get_size()
+      if size > max_size:
+        max_size = size
+    if max_size > 0:
+      bits = math.ceil(math.log2(max_size))
+    else:
+      bits = 0
+    precision = max(math.ceil(bits / 8.0), 1)
+    precision = min(max(precision, forced_prec), 8)
+    self.unit_size_precision_bytes_minus1 = precision - 1   
 
   #######################################################################################################
   

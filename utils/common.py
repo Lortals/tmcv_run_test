@@ -4,9 +4,9 @@ import sys
 import signal
 import platform
 from pathlib import Path
-import numpy as np 
 import shutil
 import argparse
+import numpy as np 
 
 #######################################################################################################
 
@@ -20,17 +20,17 @@ def handler_ctrl_c():
 
 def is_windows():
   return platform.system() == 'Windows'
-
+ 
 #######################################################################################################
 
 def to_bash_path(win_path: str ) -> str:  
-    path = Path(win_path).resolve()
-    path_str = path.as_posix()    
-    # if change_drive:
-    #   if ':' in path_str:
-    #     drive_letter = path_str[0].lower()
-    #     path_str = f"/{drive_letter}{path_str[2:]}"    
-    return path_str
+  path = Path(win_path).resolve()
+  path_str = path.as_posix()    
+  # if change_drive:
+  #   if ':' in path_str:
+  #     drive_letter = path_str[0].lower()
+  #     path_str = f"/{drive_letter}{path_str[2:]}"    
+  return path_str
 
 #######################################################################################################
 
@@ -49,17 +49,47 @@ def fixpath(path):
 
 #######################################################################################################
 
-def print_args( parse, args, file=None ):
-  print('Argument values:',file=file )
-  for group in parse._action_groups:      
+def print_args(parse, args, file=None):
+  print('Argument values:', file=file)
+  for group in parse._action_groups:
     if group.title not in ('positional arguments', 'options'):
-      print(f'  {group.title}:',file=file)
+      group_args = []
       for action in group._group_actions:
-        if action.dest != 'help':
-          if action.default != argparse.SUPPRESS:
-            print( '    --%-20s = %-40s ( %s )' % ( action.dest, getattr( args, action.dest ), 
-                action.help.strip().split('\n')[0] if action.help != argparse.SUPPRESS else '' ), 
-                flush=True,file=file)          
+        if action.dest != 'help' and action.default != argparse.SUPPRESS:
+          value = getattr(args, action.dest)
+          help_text = (action.help.strip().split('\n')[0] if action.help != argparse.SUPPRESS else '' )
+          group_args.append((action.dest, value, help_text))
+      video_indices = set()
+      for dest, _, _ in group_args:
+        m = re.match(r'.*_(\d+)$', dest)
+        if m:
+          video_indices.add(int(m.group(1)))
+      skip_indices = set()
+      for i in video_indices:
+        comp_name = f'comp_{i}'
+        if hasattr(args, comp_name):
+          comp_val = getattr(args, comp_name)
+          if comp_val in ([], None, ''):
+            skip_indices.add(i)
+      video_args = {}
+      other_args = []
+      for dest, value, help_text in group_args:
+        m = re.match(r'.*_(\d+)$', dest)
+        if m:
+          vid = int(m.group(1))
+          if vid not in skip_indices:
+            video_args.setdefault(vid, []).append((dest, value, help_text))
+        else:
+          other_args.append((dest, value, help_text))
+      if not other_args and not video_args:
+        continue
+      print(f'  {group.title}:', file=file)
+      for dest, value, help_text in other_args:
+        print('    --%-20s = %-40s ( %s )' % (dest, value, help_text), flush=True, file=file)
+      for vid in sorted(video_args.keys()):
+        print(f'    Video_{vid}:', file=file)
+        for dest, value, help_text in video_args[vid]:
+          print('      --%-18s = %-40s ( %s )' % (dest, value, help_text), flush=True, file=file)
 
 #######################################################################################################
 
@@ -73,8 +103,8 @@ def preprocess_args_with_config(argv):
     if arg in ['-c', '--config'] and i + 1 < len(argv):
       config_file = argv[i + 1]
       if not os.path.isfile(config_file):
-          raise FileNotFoundError(f"Config file '{config_file}' not found.")
-      with open(config_file, 'r') as f:
+        raise FileNotFoundError(f"Config file '{config_file}' not found.")
+      with open(config_file, 'r',encoding='utf-8') as f:
         for line in f:
           line = line.strip()
           if not line or line.startswith('#'):
@@ -89,7 +119,7 @@ def preprocess_args_with_config(argv):
             new_argv.append(value)
       skip = True  
     else:
-        new_argv.append(arg)
+      new_argv.append(arg)
   return new_argv
 
 #######################################################################################################
@@ -101,17 +131,17 @@ def create_yuv_filename(prefix, suffix='', width=0, height=0, fps=0, bits=0, for
 
 def create_output_dir( path, remove=False, verbose=False  ):  
   if not os.path.dirname(path):
-      path = os.path.join(os.getcwd(), path)  
+    path = os.path.join(os.getcwd(), path)  
   directory = os.path.dirname(path)
   if os.path.isdir(directory) and remove:
-      shutil.rmtree(directory)
+    shutil.rmtree(directory)
   if not os.path.exists(directory):
-      os.makedirs(directory)
-      if verbose:
-          print(f"Created directory: {directory}")
+    os.makedirs(directory)
+    if verbose:
+      print(f"Created directory: {directory}")
   else:
-      if verbose:
-          print(f"Directory already exists: {directory}")
+    if verbose:
+      print(f"Directory already exists: {directory}")
   return directory
 
 #######################################################################################################
@@ -144,7 +174,7 @@ def write_bin(filename, buffer):
 #######################################################################################################
 
 def log_transform(x):
-    return np.sign(x) * np.log1p(np.abs(x))
+  return np.sign(x) * np.log1p(np.abs(x))
 
 #######################################################################################################
 
@@ -170,7 +200,7 @@ def min_num_gaussian_in_gof(path, first_frame=0, num_frames=1, verbose=False):
   for index in range(first_frame, first_frame + num_frames):    
     filename = make_path(path, index)
     if verbose:
-        print("Reading file:", filename, flush=True)
+      print("Reading file:", filename, flush=True)
     with open(filename, "rb") as f:
       while True:
         line = f.readline()
@@ -186,35 +216,54 @@ def min_num_gaussian_in_gof(path, first_frame=0, num_frames=1, verbose=False):
         if line.startswith("end_header"):
           break  # Stop if we reach end of header
   if verbose:
-    print(f"Minimum number of points in GoF: %9d " % num_points, flush=True)
+    print("Minimum number of points in GoF: %9d " % num_points, flush=True)
   return num_points
 
 #######################################################################################################
 
 def normalize_path(path: str) -> str:
-    m = re.match(r"([A-Za-z]):\\(.*)", path)
-    if m:
-        drive = m.group(1).lower()
-        rest = m.group(2).replace("\\", "/")
-        return f"/{drive}/{rest}"
-    return path.replace("\\", "/")
+  m = re.match(r"([A-Za-z]):\\(.*)", path)
+  if m:
+    drive = m.group(1).lower()
+    rest = m.group(2).replace("\\", "/")
+    return f"/{drive}/{rest}"
+  return path.replace("\\", "/")
 
 #######################################################################################################
 
 def reformat(line: str) -> str:
-    parts = line.strip()[:].strip().split()
-    if not parts:
-        return line
-    exe = normalize_path(parts[0])
-    args = []
-    for p in parts[1:]:
-        if p.startswith("--") or p.startswith("-"):
-            args.append(" \\\n        " + p)   
-        else:
-            if args:
-                args[-1] += f" {normalize_path(p)}"
-            else:
-                args.append(normalize_path(p))
-    return exe + " " + "".join(args)
+  parts = line.strip()[:].strip().split()
+  if not parts:
+    return line
+  exe = normalize_path(parts[0])
+  args = []
+  for p in parts[1:]:
+    if p.startswith("--") or p.startswith("-"):
+      args.append(" \\\n        " + p)   
+    else:
+      if args:
+        args[-1] += f" {normalize_path(p)}"
+      else:
+        args.append(normalize_path(p))
+  return exe + " " + "".join(args)
 
 #######################################################################################################
+
+def get_bd_by_comp(args, comp_name):
+  for i in range(21):
+    comp_list = getattr(args, f'comp_{i}', [])
+    if comp_name in comp_list:
+      return getattr(args, f'bd_{i}', None)
+  return None
+
+#######################################################################################################
+
+def create_codec_list(args):
+  codecs = []
+  for i in range(32):
+    v = getattr(args, f'codec_{i}', None)
+    if v is not None and v not in codecs:
+      codecs.append( v )
+  return codecs
+  
+#######################################################################################################1

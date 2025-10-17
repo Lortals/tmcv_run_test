@@ -60,8 +60,6 @@ do
       -i              ${OUTDIR}/frame000_q18-12.ply \
       -b              ${TESTDIR}/test.v3c \
       -r              ${TESTDIR}/test_rec_%04d.ply \
-      --bit_depth_pos 18 \
-      --bit_depth_att 12 \
       -n              1 \
       -v "
     formatCmd "$CMD" "-- -c -i -b -r -d -n -v  >" | tee -a "$LOGENC"

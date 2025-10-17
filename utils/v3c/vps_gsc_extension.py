@@ -13,14 +13,13 @@ class VpsGscExtension:
     
   def write(self, bitstream, gof):
     from utils.group_of_frames import GroupOfFrames
-    num_videos_minus_1 = len(gof.videos) - 1
+    num_videos_minus_1 = len(gof.videos) - 1 
     first_video        = next(iter(gof.videos.values()))
     trans_position     = first_video.trans_position 
     sh_conversion      = first_video.sh_conversion.value
     src_sh_conversion  = gof.src_sh_conversion.value
     code_bd_pos_0      = first_video.bitdepth_pos[0] != 0 
     code_bd_pos_1      = first_video.bitdepth_pos[1] != 0  
-    code_bd_output     = True if gof.bit_depth_pos != 32 or gof.bit_depth_att != 32 else False
     bitstream.write_bits(num_videos_minus_1, 5)                             # u(5)
     bitstream.write_bits(trans_position, 1)                                 # u(1)
     bitstream.write_bits(sh_conversion, 2)                                  # u(2)
@@ -32,11 +31,7 @@ class VpsGscExtension:
     bitstream.write_bits(code_bd_pos_1, 1)                                  # u(1)
     if code_bd_pos_1:   
       bd_pos_1 = first_video.bitdepth_pos[1]    
-      bitstream.write_bits(bd_pos_1, 5)                                     # u(5)
-    bitstream.write_bits(code_bd_output, 1)                                 # u(1)    
-    if code_bd_output:    
-      bitstream.write_bits(gof.bit_depth_pos, 5)                            # u(5)
-      bitstream.write_bits(gof.bit_depth_att, 5)                            # u(5)
+      bitstream.write_bits(bd_pos_1, 5)                                     # u(5)   
     for idx, (_, video) in enumerate(gof.videos.items()):   
       type_value     = video.type.value   
       codec_id       = video.codec_id     
@@ -49,13 +44,12 @@ class VpsGscExtension:
       bitstream.write_bits(codec_id, 2)                                     # u(2)
       bitstream.write_bits(packing_id, 1)                                   # u(1)
       bitstream.write_bits(format_id, 2)                                    # u(2)
-      bitstream.write_bits(num_components_minus1, 7)                        # u(7)
-      if not code_bd_output:    
-        for j in range( num_components_minus1 + 1 ):    
-          min_value = video.min[j]    
-          max_value = video.max[j]    
-          bitstream.write_float(min_value)                                  # f(32)
-          bitstream.write_float(max_value)                                  # f(32)
+      bitstream.write_bits(num_components_minus1, 7)                        # u(7)      
+      for j in range( num_components_minus1 + 1 ):    
+        min_value = video.min[j]    
+        max_value = video.max[j]    
+        bitstream.write_float(min_value)                                    # f(32)
+        bitstream.write_float(max_value)                                    # f(32)
   
   #######################################################################################################
 
@@ -70,10 +64,6 @@ class VpsGscExtension:
     bd_pos_0              = bitstream.read_bits(5) if code_bd_pos_0 else 0  # u(5)  
     code_bd_pos_1         = bitstream.read_bits(1)                          # u(1)     
     bd_pos_1              = bitstream.read_bits(5) if code_bd_pos_1 else 0  # u(5)
-    code_bd_output        = bitstream.read_bits(1)                          # u(1)
-    if code_bd_output:    
-       gof.bit_depth_pos = bitstream.read_bits(5)                           # u(5)
-       gof.bit_depth_att = bitstream.read_bits(5)                           # u(5)
     for i in range( num_videos_minus_1 + 1 ):   
       type_value            = bitstream.read_bits(5)                        # u(5)
       bitdepth              = bitstream.read_bits(5)                        # u(5)
@@ -94,11 +84,11 @@ class VpsGscExtension:
       gof.videos[type].num_components = num_components_minus1 + 1
       gof.videos[type].min            = [0.0] * (num_components_minus1 + 1)
       gof.videos[type].max            = [0.0] * (num_components_minus1 + 1)
-      if not code_bd_output:
-        for j in range( gof.videos[type].num_components ):
-          min_value = bitstream.read_float()                                # f(32)
-          max_value = bitstream.read_float()                                # f(32)
-          gof.videos[type].min[j] = min_value
-          gof.videos[type].max[j] = max_value
+      
+      for j in range( gof.videos[type].num_components ):
+        min_value = bitstream.read_float()                                  # f(32)
+        max_value = bitstream.read_float()                                  # f(32)
+        gof.videos[type].min[j] = min_value
+        gof.videos[type].max[j] = max_value
 
 #######################################################################################################

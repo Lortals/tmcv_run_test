@@ -1,17 +1,18 @@
+
 import os
 import subprocess
 import platform
-import ffmpeg
-from ffmpeg._run import run_async
 import json
 from pathlib import Path
 import shutil
-if shutil.which("ffmpeg") is None:
-    print("FFmpeg is not found please update path.")
-    exit(1)
-
-from utils.common import write_bin, read_bin, create_yuv_filename, remove_extension, to_bash_path, fixpath, is_windows, reformat
+import ffmpeg
+from ffmpeg._run import run_async
+from utils.common import write_bin, read_bin, create_yuv_filename, to_bash_path, fixpath, reformat
 from utils.v3c.type import Format 
+if shutil.which("ffmpeg") is None:
+  print("FFmpeg is not found please update path.")
+  exit(1)
+
 
 #######################################################################################################
 
@@ -19,7 +20,7 @@ def get_binary_path(codec, mode ):
   json_path = (Path(__file__).resolve().parent.parent  / "dependencies/binary_path.json").resolve()
   if not json_path.exists():
     raise FileNotFoundError(f"JSON file not found: {json_path}")
-  with open(json_path, "r") as f:
+  with open(json_path, "r", encoding="utf-8") as f:
     binaries = json.load(f)
   if codec not in binaries:
     raise ValueError(f"Unknown codec '{codec}'. Available: {', '.join(binaries.keys())}")      
@@ -33,7 +34,7 @@ def get_binary_path(codec, mode ):
     print('')
     exit()
   return path
-
+ 
 #######################################################################################################
 
 def encode_video( type, name, index, output_dir, video, codec, config, qp, dqp, verbose=False): 
@@ -102,18 +103,24 @@ def encode_hm(name, index, output_dir, video, codec, config, qp, dqp, verbose=Fa
   ]  
   print(f"dqp file = {dqp}")
   if os.path.exists(dqp):
-      cmd.append('--dQPFile=' + to_bash_path(dqp))
+    cmd.append('--dQPFile=' + to_bash_path(dqp))
   # cmd.append(  '--ReconFile=' + recName )  
   if verbose:
     print( reformat(  ' '.join( cmd ) )  )
   with open(log_path, 'w', encoding='utf-8') as logfile:
-    result = subprocess.run(cmd, stdout=logfile, stderr=subprocess.STDOUT, text=True)
-  if verbose:
+    result = subprocess.run(cmd, stdout=logfile, stderr=subprocess.STDOUT, text=True, check=True)
+    if result.returncode != 0:
+      print("Command failed: ", reformat(  ' '.join( cmd ) ) ) 
+      raise RuntimeError("Video encoding failed")           
     with open(log_path, 'r', encoding='utf-8') as logfile:
-        for line in logfile:
-            print(line.rstrip())
+      for line in logfile:
+        print(line.rstrip())
     print(f"ENC HM    : encoded: {input} in {output}")
-  return read_bin(output)
+  bin = read_bin(output)
+  # cleanup
+  # os.remove(input)
+  # os.remove(output)
+  return bin
 
 #######################################################################################################
 
@@ -134,91 +141,103 @@ def decode_hm(name, index, output_dir, bitstream, width, height, fps, bits, form
     print( ' '.join( cmd ) )
 
   with open(log_path, 'w', encoding='utf-8') as logfile:
-    result = subprocess.run(cmd, stdout=logfile, stderr=subprocess.STDOUT, text=True)
+    result = subprocess.run(cmd, stdout=logfile, stderr=subprocess.STDOUT, text=True, check=True)
+    if result.returncode != 0:
+      print("Command failed: ", reformat(  ' '.join( cmd ) ) ) 
+      raise RuntimeError("Video decoding failed")           
   if verbose:
     with open(log_path, 'r', encoding='utf-8') as logfile:
       for line in logfile:
         print(line.rstrip())
   video.read( output, verbose )
   if format == Format.YUV400:
-    video.convert_420_to_400()    
+    video.convert_420_to_400()
   if verbose:
     print(f"DEC HM    : decoded: {input} in {output}")
+  # cleanup
+  # os.remove(input)
+  # os.remove(output)
 
 #######################################################################################################
 ###################################### VTM ############################################################
 #######################################################################################################
 
 def encode_vtm(name, index, output_dir, video, codec, config, qp, verbose=False):   
-    path   = get_binary_path(codec, 'encoder' )
-    name   = "%02d_%s_enc" % (index, name)
-    if video.format == '400':
-        video.convert_400_to_420()
-    input    = video.write( directory=output_dir, path=name, verbose=verbose )
-    output   = to_bash_path( os.path.join( output_dir, name + '.vtm' ))    
-    log_path = os.path.join(output_dir, name + '.log')
+  path   = get_binary_path(codec, 'encoder' )
+  name   = "%02d_%s_enc" % (index, name)
+  if video.format == '400':
+    video.convert_400_to_420()
+  input    = video.write( directory=output_dir, path=name, verbose=verbose )
+  output   = to_bash_path( os.path.join( output_dir, name + '.vtm' ))    
+  log_path = os.path.join(output_dir, name + '.log')
+  if verbose:
+    print("ENC VTM   : video %s => %d x %d bits = %d format = %s comp = %d " % 
+      ( input, video.width, video.height, video.bits, video.format, video.get_num_comp() ))
+  cmd = [ fixpath( path ) ]
+  for cfg in config:
+    cfg_path = to_bash_path( str( (Path(__file__).resolve().parent.parent / cfg ).resolve() ) )
+    cmd += [ '-c', cfg_path ]
     if verbose:
-        print("ENC VTM   : video %s => %d x %d bits = %d format = %s comp = %d " % 
-          ( input, video.width, video.height, video.bits, video.format, video.get_num_comp() ))
-    cmd = [ fixpath( path ) ]
-    for cfg in config:
-        cfg_path = to_bash_path( str( (Path(__file__).resolve().parent.parent / cfg ).resolve() ) )
-        cmd += [ '-c', cfg_path ]
-        if verbose:
-            print("cfg_path = %s " % cfg_path )
-    cmd += [
-        '--InputFile='             + input,
-        '--BitstreamFile='         + output,
-        '--InputChromaFormat='     + video.format, 
-        '--FramesToBeEncoded='     + str( video.num_frames() ),
-        '--FrameRate=10',   
-        '--SourceWidth='           + str( video.width ),
-        '--SourceHeight='          + str( video.height ),
-        '--InputBitDepth='         + str( max( video.bits, 8 ) ),
-        '--InternalBitDepth='      + str( max( video.bits, 8 ) ),
-        '--OutputBitDepth='        + str( max( video.bits, 8 ) ),
-        '--QP='                    + str( qp ),
-        '--ConformanceWindowMode=1',
-        "--TemporalSubsampleRatio=1" ]
-    # cmd.append(  '--ReconFile=' + recName )
-    if verbose:
-        print( ' '.join( cmd ) )        
-    with open(log_path, 'w', encoding='utf-8') as logfile:
-      result = subprocess.run(cmd, stdout=logfile, stderr=subprocess.STDOUT, text=True)
-    if verbose:
-      with open(log_path, 'r', encoding='utf-8') as logfile:
-        for line in logfile:
-          print(line.rstrip())
-      print(f"ENC VTM   : encoded: {input} in {output}")
+      print("cfg_path = %s " % cfg_path )
+  cmd += [
+      '--InputFile='             + input,
+      '--BitstreamFile='         + output,
+      '--InputChromaFormat='     + video.format, 
+      '--FramesToBeEncoded='     + str( video.num_frames() ),
+      '--FrameRate=10',   
+      '--SourceWidth='           + str( video.width ),
+      '--SourceHeight='          + str( video.height ),
+      '--InputBitDepth='         + str( max( video.bits, 8 ) ),
+      '--InternalBitDepth='      + str( max( video.bits, 8 ) ),
+      '--OutputBitDepth='        + str( max( video.bits, 8 ) ),
+      '--QP='                    + str( qp ),
+      '--ConformanceWindowMode=1',
+      "--TemporalSubsampleRatio=1" ]
+  # cmd.append(  '--ReconFile=' + recName )
+  if verbose:
+    print( ' '.join( cmd ) )        
+  with open(log_path, 'w', encoding='utf-8') as logfile:
+    result = subprocess.run(cmd, stdout=logfile, stderr=subprocess.STDOUT, text=True, check=True)    
+    if result.returncode != 0:
+      print("Command failed: ", reformat(  ' '.join( cmd ) ) ) 
+      raise RuntimeError("Video encoding failed")           
+  if verbose:
+    with open(log_path, 'r', encoding='utf-8') as logfile:
+      for line in logfile:
+        print(line.rstrip())
+    print(f"ENC VTM   : encoded: {input} in {output}")
     return read_bin(output)
 
 #######################################################################################################
 
 def decode_vtm(name, index, output_dir, bitstream, width, height, fps, bits, format, video, codec, verbose=False):
-    path   = get_binary_path(codec, 'decoder' )
-    name   = "%02d_%s_dec" % (index, name)
-    input  = to_bash_path( os.path.join( output_dir, name + '.vtm' ))
-    output = to_bash_path( os.path.join(output_dir, create_yuv_filename(name, "", width, height, fps, bits, "444" if format == Format.YUV444 else "420")) ) 
-    log_path = os.path.join(output_dir, name + '.log')
-    write_bin( input, bitstream )
-    cmd = [
-        fixpath( path ),
-        '--BitstreamFile='  + input,
-        '--ReconFile='      + output,    
-        '--OutputBitDepth=' + str( max( bits, 8 ) )
-    ]
-    if verbose:
-        print( ' '.join( cmd ) )
-    with open(log_path, 'w', encoding='utf-8') as logfile:
-      result = subprocess.run(cmd, stdout=logfile, stderr=subprocess.STDOUT, text=True)
-    if verbose:
-      with open(log_path, 'r', encoding='utf-8') as logfile:
-        for line in logfile:
-          print(line.rstrip())
-      print(f"DEC VTM   : decoded: {input} in {output}")
-    video.read( output, verbose )
-    if format == Format.YUV400:
-        video.convert_420_to_400()
+  path   = get_binary_path(codec, 'decoder' )
+  name   = "%02d_%s_dec" % (index, name)
+  input  = to_bash_path( os.path.join( output_dir, name + '.vtm' ))
+  output = to_bash_path( os.path.join(output_dir, create_yuv_filename(name, "", width, height, fps, bits, "444" if format == Format.YUV444 else "420")) ) 
+  log_path = os.path.join(output_dir, name + '.log')
+  write_bin( input, bitstream )
+  cmd = [
+      fixpath( path ),
+      '--BitstreamFile='  + input,
+      '--ReconFile='      + output,    
+      '--OutputBitDepth=' + str( max( bits, 8 ) )
+  ]
+  if verbose:
+    print( ' '.join( cmd ) )
+  with open(log_path, 'w', encoding='utf-8') as logfile:
+    result = subprocess.run(cmd, stdout=logfile, stderr=subprocess.STDOUT, text=True, check=True)    
+    if result.returncode != 0:
+      print("Command failed: ", reformat(  ' '.join( cmd ) ) ) 
+      raise RuntimeError("Video encoding failed")           
+  if verbose:
+    with open(log_path, 'r', encoding='utf-8') as logfile:
+      for line in logfile:
+        print(line.rstrip())
+    print(f"DEC VTM   : decoded: {input} in {output}")
+  video.read( output, verbose )
+  if format == Format.YUV400:
+    video.convert_420_to_400()
 
 #######################################################################################################
 ###################################### FFMPEG #########################################################

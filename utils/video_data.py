@@ -1,14 +1,17 @@
-import sys 
-import numpy as np
+import os
 import math
-from scipy.stats    import norm
-from scipy.optimize import minimize_scalar
+from math import isfinite
+import numpy as np
 from utils.common   import log_transform, inverse_log_transform
 from utils.video    import Video
-from utils.v3c.type import V3CUnitType, Quantization, Format, Packing, ColorStandard
-from scipy.stats    import norm
-import scipy.stats as stats
-  
+from utils.v3c.type import V3CUnitType, Quantization, Format, Packing, ColorStandard  
+
+#######################################################################################################
+
+def _ensure_dir(path: str):
+  if path and not os.path.exists(path):
+    os.makedirs(path, exist_ok=True)
+
 #######################################################################################################
 
 class VideoData:
@@ -47,7 +50,7 @@ class VideoData:
     self.max               = [0] * 3
     self.center            = [0] * 3
     self.sigma             = [0] * 3
-    # Video data  
+    # Video data
     self.width             = 0 
     self.height            = 0
     self.num_components    = 0
@@ -67,7 +70,8 @@ class VideoData:
     self.block_width  = 0
     self.block_height = 0
     if verbose: 
-      print("create_video %-10s %6s %8s grid = %2d %2d params = %s" % (type.name, format.name, packing.name, self.grid_width, self.grid_height, self.name(True)))
+      print("create_video %-10s %6s %8s grid = %2d %2d params = %s" % (type.name, format.name, packing.name, 
+        self.grid_width, self.grid_height, self.name(True)))
 
   #######################################################################################################
   
@@ -77,6 +81,8 @@ class VideoData:
         return param
       elif param in ('x_add', 'y_add', 'z_add'):
         return param[0] + 'a'   
+      elif param in ('x_odd', 'y_odd', 'z_odd'):
+        return param[0] + 'o'   
       elif param == 'opacity':
         return 'o'
       elif param == 'zero':
@@ -100,7 +106,9 @@ class VideoData:
       if name in ('x', 'y', 'z'):
         parts.append(name)
       elif name in ('x_add', 'y_add', 'z_add'):
-        parts.append(name[0] + 'a')   
+        parts.append(name[0] + 'a')
+      elif name in ('x_odd', 'y_odd', 'z_odd'):
+        parts.append(name[0] + 'o')   
       elif name == 'opacity':
         parts.append('o')
       elif name == 'zero':
@@ -122,7 +130,7 @@ class VideoData:
     num_params = len(self.list_params)
     total_frames = video.num_frames()
     if video is None:
-        raise ValueError(f"Unknown video type: {type}")
+      raise ValueError(f"Unknown video type: {type}")
     result = 0
     if self.packing == Packing.TEMPORAL: 
       if self.format != Format.YUV400: 
@@ -185,7 +193,7 @@ class VideoData:
   def __get_grid_size(self):
     N = len(self.list_params)
     if self.format != Format.YUV400:
-      N //= 3 
+      N = math.ceil(N / 3)
     h = math.isqrt(N)
     while h > 0:
       w = math.ceil(N / h)
@@ -224,10 +232,8 @@ class VideoData:
     num_frames          = -1
     if verbose:
       print("  Pack one frame:  %s %s %s, comp = %d, grid = %d x %d block = %dx %d frame = %d x %d " %( 
-          self.type.name, self.format.name, self.packing.name, 
-          self.num_components, self.grid_width, self.grid_height, 
-          self.block_width, self.block_height, self.width, self.height)    )
-
+          self.type.name, self.format.name, self.packing.name, self.num_components, self.grid_width, self.grid_height, 
+          self.block_width, self.block_height, self.width, self.height) )
     for i, id in enumerate(self.list_params if list_params is None else list_params):
       if id not in { 'zero', 'x_add', 'y_add', 'z_add' }:
         data = pointcloud.df[id].values.reshape(pointcloud.sidelen, pointcloud.sidelen, -1)
@@ -239,27 +245,24 @@ class VideoData:
       f, x, y, c = self.get_pack_position(i)
       if f != num_frames:
         self.video_src.add_empty_frame( width=self.width,  height=self.height, bits=32, format=self.format.video_name(), verbose=verbose ) 
-        num_frames = f
-      
+        num_frames = f      
       self.video_src.pack_plane(data=data, f=-1, x=x, y=y, c=c, verbose=verbose)
-      if verbose:
-        print("  pack %-10s size = %4d x %4d, f = %3d pos = %4d %4d c = %2d bd = %2d => pc = %20.12f => %20.12f" % (
-              id, self.width, self.height, f, x, y, c, self.bitdepth, 
-              data[0,0],
-              self.video_src.c(-1, c)[0,0]) ) 
+      if verbose: 
+        print("  pack %-10s size = %4d x % 4d, f = %3d pos = %4d %4d c = %2d bd = %2d => pc = %20.12f => %20.12f" % (
+              id, self.width, self.height, f, x, y, c, self.bitdepth, data[0,0], self.video_src.c(-1, c)[0,0]) ) 
        
   #######################################################################################################
 
   def get_block(self, param_name: str, frame_index: int, type: str, verbose=False) -> np.ndarray:  
     if param_name not in self.list_params:
-      raise ValueError(f"Parameter '{param_name}' not found in list_params.")
+      raise ValueError(f"get_block: '{param_name}' not found in list_params.")
     param_index     = self.list_params.index(param_name)
     f, x, y, c      = self.get_pack_position(param_index)    
     frame_factor    = self.number_of_video_frames_by_frames(type)
     vid_frame_index = f + frame_index * frame_factor    
-    if verbose:
-      print("      Get block %6s f = %2d type = %s => video frame = %3d comp = %d pos = %4d %4d " % 
-        ( param_name, frame_index, type, vid_frame_index, c, x, y ))
+    # if verbose:
+    #   print("      Get block %10s f = %2d type = %s => video frame = %3d comp = %d pos = %4d %4d " % 
+    #     ( param_name, frame_index, type, vid_frame_index, c, x, y ))
     video = { "src": self.video_src, "uint": self.video_uint, "dec": self.video_dec, "res": self.video_res }.get(type)
     if video is None or video.num_frames() <= vid_frame_index:
       raise ValueError(f"Video '{type}' not available or frame_index {vid_frame_index} is out of range.")
@@ -273,7 +276,7 @@ class VideoData:
 
   def set_block(self, param_name: str, frame_index: int, block: np.ndarray, type: str, verbose=False):   
     if param_name not in self.list_params:
-      raise ValueError(f"Parameter '{param_name}' not found in list_params.")
+      raise ValueError(f"set_block: '{param_name}' not found in list_params.")
     param_index = self.list_params.index(param_name)
     f, x, y, c = self.get_pack_position(param_index)
     frame_factor = self.number_of_video_frames_by_frames(type)
@@ -284,7 +287,11 @@ class VideoData:
     if self.format == Format.YUV400 and c != 0:
       raise ValueError(f"YUV400 format has only one component, invalid c = {c} for param '{param_name}'")
     # if verbose:
-    #   print("      Set block %6s frame = %2d type = %s " % ( param_name, frame_index, type ))
+    #   try:
+    #     ref_dtype = video.frames[0][0].dtype
+    #   except (IndexError, TypeError, AttributeError):
+    #     ref_dtype = "N/A"
+    #   print(f"      Set block {param_name:<10s} frame = {frame_index:2d} type = {type} dtype = {block.dtype} in {ref_dtype}")
     video.frames[vid_frame_index][c][y:y + self.block_height, x:x + self.block_width] = block
 
   #######################################################################################################
@@ -305,7 +312,7 @@ class VideoData:
           flat_data = inverse_log_transform(flat_data)
         pointcloud.df[param] = flat_data
         if verbose:
-          print("  Reconst: frame = %2d param = %-16s data = " % (frame_index, param), flat_data)          
+          print("  rec. %-16s: [ %12.8f %12.8f %12.8f %12.8f ... ] " % (param, flat_data[0], flat_data[1], flat_data[2], flat_data[3]))
 
   #######################################################################################################
   ###################################### Quantization ###################################################
@@ -321,11 +328,11 @@ class VideoData:
 
   #######################################################################################################
 
-  def dequantize(self, residual=False, verbose=False):
+  def dequantize(self, verbose = False):
     if self.quantization == Quantization.LINEAR:
-      self._dequantize_linear(residual, verbose)
+      self._dequantize_linear(verbose)
     elif self.quantization == Quantization.GAUSSIAN:
-      self._dequantize_gaussian(residual, verbose)
+      self._dequantize_gaussian(verbose)
     else:
       raise ValueError(f"Unsupported dequantization method: {self.quantization.name}")
 
@@ -341,7 +348,8 @@ class VideoData:
     num_frames       = self.num_frames('src')
     num_frames_video = self.video_src.num_frames()
     num_blocks       = len(self.list_params)
-    self.video_uint.alloc(num_frames_video, self.width, self.height, self.bitdepth, self.format.video_name() )
+    self.video_uint.alloc(num_frames_video, self.width, self.height, self.bitdepth, format=self.format.video_name() )
+    self.video_res.alloc(num_frames_video, self.width, self.height, self.bitdepth, force_type=np.uint32, format=self.format.video_name())
     for block_index in range(num_blocks):
       param = self.list_params[block_index]
       if param in ['zero', 'x_add', 'y_add', 'z_add']:
@@ -357,64 +365,93 @@ class VideoData:
       max_val = np.max(values)
       self.min.append(min_val)
       self.max.append(max_val)
-      if verbose:
-        print(f"  Block '{param}': min = {min_val:.4f}, max = {max_val:.4f}")
+
     for frame_index in range(num_frames):
-      for block_index, param in enumerate(self.list_params):
-        bitdepth = self.bitdepth_pos[0] if param in ['x', 'y', 'z'] and self.bitdepth_pos[0] != 0 else self.bitdepth
-        bit_max = (2 ** bitdepth) - 1
-        if param != 'zero':
+      for block_index, param in enumerate(self.list_params):        
+        if param not in [ 'zero', 'x_add', 'y_add', 'z_add' ]: 
           block = self.get_block(param, frame_index, type='src', verbose=verbose)
-          min_val = self.min[block_index]
-          max_val = self.max[block_index]
+          min_val, max_val = self.min[block_index], self.max[block_index]
           if max_val - min_val < 1e-8:
             normed = np.zeros_like(block)
           else:
             normed = (block - min_val) / (max_val - min_val)
-          quantized = np.clip(np.round(normed * (bit_max + 1)), 0, bit_max).astype(np.uint8 if self.bitdepth <= 8 else np.uint16)
-          self.set_block(param, frame_index, quantized, type='uint', verbose=verbose)
+          if param in ['x', 'y', 'z']:
+            bitdepth = self.bitdepth_pos[0] + self.bitdepth_pos[1] 
+            bit_max = (2 ** bitdepth) - 1
+            quantized = np.clip(np.round(normed * (bit_max + 1)), 0, bit_max).astype(np.uint32)
+            self.set_block(param, frame_index, quantized, type='uint', verbose=verbose)            
+            self.set_block(param, frame_index, quantized, type='res', verbose=verbose)
+          else: 
+            bitdepth = self.bitdepth
+            bit_max = (2 ** bitdepth) - 1 
+            quantized = np.clip(np.round(normed * (bit_max + 1)), 0, bit_max).astype(np.uint8 if self.bitdepth <= 8 else np.uint32)          
+            self.set_block(param, frame_index, quantized, type='uint', verbose=verbose)
           if verbose:
-            print("  quant %-10s size = %4d x %4d, f = %3d pos = %4d %4d c = %2d bd = %2d => %20.12f => %6d" % (
-                  param, self.width, self.height, frame_index, *self.get_pack_position(block_index)[1:], bitdepth, 
-                  block[0,0], quantized[0,0]) )
-
+            print("  quant %-10s size = %4d x %4d, f = %3d pos = %4d %4d c = %2d bd = %2d min = %12.8f max = %12.8f : %20.12f => %6d" % ( param, self.width, self.height, 
+                  frame_index, *self.get_pack_position(block_index)[1:], bitdepth, min_val, max_val, block[0,0], quantized[0,0]) )
+                  
   #######################################################################################################
 
-  def _dequantize_linear(self, residual=False, verbose=False):
+  def _dequantize_linear(self, verbose=False):
     if verbose:
       print(f"Dequantization (linear): packing = {self.packing.name}, type = {self.type.name}")
     num_frames       = self.num_frames('uint')
     num_frames_video = self.video_uint.num_frames()
-    num_blocks       = len(self.list_params)
-    self.video_dec.alloc(num_frames_video, self.width, self.height, 32, self.format.video_name())
-    if residual:
-      self.video_res.alloc(num_frames_video, self.width, self.height, 32, self.format.video_name())
+    self.video_dec.alloc(num_frames_video, self.width, self.height, 32, format=self.format.video_name())        
     for frame_index in range(num_frames):
-      for block_index, param in enumerate(self.list_params):
-        bitdepth = self.bitdepth_pos[0] if param in ['x', 'y', 'z'] and self.bitdepth_pos[0] != 0 else self.bitdepth
-        bit_max = (2 ** bitdepth) - 1
-        min_val = self.min[block_index]
-        max_val = self.max[block_index]
-        block = self.get_block(param, frame_index, type='uint', verbose=verbose)
-        normed = block.astype(np.float32) / (bit_max + 1)
-        dequantized = normed * (max_val - min_val) + min_val
-        self.set_block(param, frame_index, dequantized, type='dec', verbose=verbose)
-        if residual:
-          original = self.get_block(param, frame_index, type='src', verbose=verbose)
-          res = original - dequantized
-          self.set_block(param, frame_index, res, type='res', verbose=verbose)
-        if verbose:
-          print("  dequ %-10s size = %4d x %4d, f = %3d pos = %4d %4d c = %2d bd = %2d => %6d => %20.12f " % (
-                param, self.width, self.height, frame_index, *self.get_pack_position(block_index)[1:], bitdepth, 
-                block[0,0], dequantized[0,0]) )
+      for block_index, param in enumerate(self.list_params):        
+        if param not in [ 'zero', 'x_add', 'y_add', 'z_add' ]: 
+          if param in ['x', 'y', 'z']:
+            bitdepth = self.bitdepth_pos[0] + self.bitdepth_pos[1]
+            if self.bitdepth_pos[1] > 0:
+              block    = self.get_block(param, frame_index, type='res', verbose=verbose)
+            else:
+              block    = self.get_block(param, frame_index, type='uint', verbose=verbose)
+          else:
+            bitdepth = self.bitdepth
+            block = self.get_block(param, frame_index, type='uint', verbose=verbose)
+          bit_max = (2 ** bitdepth) - 1
+          min_val, max_val = self.min[block_index], self.max[block_index]
+          normed = block.astype(np.float32) / (bit_max + 1)
+          dequantized = normed * (max_val - min_val) + min_val
+          self.set_block(param, frame_index, dequantized, type='dec', verbose=verbose)
+          if verbose:
+            print("  dequ %-10s size = %4d x %4d, f = %3d pos = %4d %4d c = %2d bd = %2d min = %12.8f max = %12.8f : %6d => %20.12f " % (
+                  param, self.width, self.height, frame_index, *self.get_pack_position(block_index)[1:], bitdepth, min_val, max_val,
+                  block[0,0], dequantized[0,0]) )
 
-  #######################################################################################################
-  ###################################### Gaussian quantization ##########################################
-  #######################################################################################################
+#######################################################################################################
+###################################### Gaussian quantization ##########################################
+#######################################################################################################
   
+  def _safe_compute_levels(self,min_val, max_val, center, sigma, levels_count):
+    sigma = float(max(sigma, 1e-6))
+    fine_grid = np.linspace(min_val, max_val, 10000, dtype=np.float64)
+    coef = 1.0 / (sigma * np.sqrt(2.0 * np.pi))
+    pdf = coef * np.exp(-0.5 * ((fine_grid - center) / sigma) ** 2)
+    cdf = np.cumsum(pdf)
+    cdf /= cdf[-1] if cdf[-1] != 0 else 1.0
+    target_cdf = np.linspace(0.0, 1.0, levels_count, dtype=np.float64)
+    return np.interp(target_cdf, cdf, fine_grid)
+
+#######################################################################################################
+
+  def _get_levels(self, block_index, levels_count):
+    min_val = self.min[block_index]
+    max_val = self.max[block_index]
+    center  = self.center[block_index]
+    sigma   = self.sigma[block_index]
+    if hasattr(self, "_QuantizeGaussian__compute_levels"):  
+      return self._QuantizeGaussian__compute_levels(min_val, max_val, center, sigma, levels_count)
+    if hasattr(self, "__compute_levels"):
+      return self.__compute_levels(min_val, max_val, center, sigma, levels_count)
+    return self._safe_compute_levels(min_val, max_val, center, sigma, levels_count)
+
+#######################################################################################################
+
   def _quantize_gaussian(self, verbose=False):
     if verbose:
-        print(f"Quantization (gaussian): packing = {self.packing.name}, type = {self.type.name}")
+      print(f"Quantization (gaussian): packing = {self.packing.name}, type = {self.type.name}")
     self.min, self.max, self.center, self.sigma = [], [], [], []
     num_frames       = self.num_frames('src')
     num_frames_video = self.video_src.num_frames()
@@ -423,68 +460,77 @@ class VideoData:
     for block_index in range(num_blocks):
       param = self.list_params[block_index]
       if param in ['zero', 'x_add', 'y_add', 'z_add']:
-        self.min.append(0)
-        self.max.append(0)
-        self.center.append(0)
-        self.sigma.append(1.0)
+        self.min.append(0); self.max.append(0); self.center.append(0); self.sigma.append(1.0)
         continue
-      bitdepth = self.bitdepth_pos[0] if param in ['x', 'y', 'z'] and self.bitdepth_pos[0] != 0 else self.bitdepth
+      bitdepth = self.bitdepth_pos[0] if param in ['x','y','z'] and self.bitdepth_pos[0] != 0 else self.bitdepth
       levels_count = 2 ** bitdepth
       values = []
       for frame_index in range(num_frames):
         block = self.get_block(param, frame_index, type='src', verbose=verbose)
         values.append(block.flatten())
-      values = np.concatenate(values)
-      min_val, max_val = np.min(values), np.max(values)
+      values = np.concatenate(values).astype(np.float64)
+      min_val = float(np.min(values))
+      max_val = float(np.max(values))
       hist_counts, bin_edges = np.histogram(values, bins=levels_count, range=(min_val, max_val))
-      bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-      center = bin_centers[np.argmax(hist_counts)]
-      sigma = np.std(values)
-      self.min.append(min_val)
-      self.max.append(max_val)
-      self.center.append(center)
-      self.sigma.append(sigma)
-      if verbose:
-        print(f"  Block {block_index:2d} '{param}': min={min_val:.4f}, max={max_val:.4f}, center={center:.4f}, sigma={sigma:.4f}")
+      bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2.0
+      center = float(bin_centers[np.argmax(hist_counts)])
+      sigma = float(np.std(values))
+      if not isfinite(sigma) or sigma <= 0.0:
+        sigma = 1.0
+      self.min.append(min_val); self.max.append(max_val); self.center.append(center); self.sigma.append(sigma)
     for frame_index in range(num_frames):
       for block_index, param in enumerate(self.list_params):
         if param in ['zero', 'x_add', 'y_add', 'z_add']:
           continue
-        bitdepth = self.bitdepth_pos[0] if param in ['x', 'y', 'z'] and self.bitdepth_pos[0] != 0 else self.bitdepth
+        bitdepth = self.bitdepth_pos[0] if param in ['x','y','z'] and self.bitdepth_pos[0] != 0 else self.bitdepth
         levels_count = 2 ** bitdepth
-        block = self.get_block(param, frame_index, type='src', verbose=verbose).flatten()
-        levels = np.linspace(self.min[block_index], self.max[block_index], levels_count)
-        idx = np.searchsorted(levels, block)
+        block = self.get_block(param, frame_index, type='src', verbose=verbose).astype(np.float64).flatten()
+        levels = self._get_levels( block_index, levels_count)
+        idx = np.searchsorted(levels, block, side='left')
+
+        right_idx = np.clip(idx, 0, levels_count - 1)
+        left_idx  = np.clip(idx - 1, 0, levels_count - 1)
+        choose_left = (np.abs(block - levels[left_idx]) <= np.abs(block - levels[right_idx]))
+        idx = np.where(choose_left, left_idx, right_idx)
         idx = np.clip(idx, 0, levels_count - 1)
-        quantized = idx.astype(np.uint8 if self.bitdepth <= 8 else np.uint16).reshape(self.block_height, self.block_width)
+        q_dtype = np.uint8 if self.bitdepth <= 8 else np.uint16
+        quantized = idx.astype(q_dtype).reshape(self.block_height, self.block_width)
         self.set_block(param, frame_index, quantized, type='uint', verbose=verbose)
+        if verbose:
+          print("  Block %2d %-10s: min = %8.4f max = %8.4f center = %8.4f sigma = %8.4f : %20.12f => %6d " % 
+            (block_index, param, min_val, max_val, center, sigma, block[0], quantized[0,0]))
 
 #######################################################################################################
 
-  def _dequantize_gaussian(self, residual=False, verbose=False):
+  def _dequantize_gaussian(self, verbose=False):
     if verbose:
       print(f"Dequantization (gaussian): packing = {self.packing.name}, type = {self.type.name}")
-
     num_frames       = self.num_frames('uint')
     num_frames_video = self.video_uint.num_frames()
-    num_blocks       = len(self.list_params)
-    self.video_dec.alloc(num_frames_video, self.width, self.height, 32, self.format.video_name())
-    if residual:
-      self.video_res.alloc(num_frames_video, self.width, self.height, 32, self.format.video_name())
+    self.video_dec.alloc(num_frames_video, self.width, self.height, 32, format=self.format.video_name())
+    self.video_res.alloc(num_frames_video, self.width, self.height, 32, force_type=np.uint32,format=self.format.video_name())
+
+    levels_cache = {} 
     for frame_index in range(num_frames):
       for block_index, param in enumerate(self.list_params):
         if param in ['zero', 'x_add', 'y_add', 'z_add']:
           continue
-        bitdepth = self.bitdepth_pos[0] if param in ['x', 'y', 'z'] and self.bitdepth_pos[0] != 0 else self.bitdepth
-        levels_count = 2 ** bitdepth
+        bitdepth = self.bitdepth_pos[0] if param in ['x','y','z'] and self.bitdepth_pos[0] != 0 else self.bitdepth
+        levels_count = 2 ** bitdepth        
+        key = (block_index, levels_count)
+        if key not in levels_cache:
+          levels_cache[key] = self._get_levels(block_index, levels_count)
+        levels = levels_cache[key]
         indices = self.get_block(param, frame_index, type='uint', verbose=verbose).astype(np.int32).flatten()
         indices = np.clip(indices, 0, levels_count - 1)
-        levels = np.linspace(self.min[block_index], self.max[block_index], levels_count)
         dequantized = levels[indices].reshape(self.block_height, self.block_width)
         self.set_block(param, frame_index, dequantized, type='dec', verbose=verbose)
-        if residual:
-          original = self.get_block(param, frame_index, type='src', verbose=verbose)
-          res = original - dequantized
-          self.set_block(param, frame_index, res, type='res', verbose=verbose)
-
+        if verbose:
+          min_val = self.min[block_index]
+          max_val = self.max[block_index]
+          center  = self.center[block_index]
+          sigma   = self.sigma[block_index]
+          print("  Block %2d %-10s: min = %8.4f max = %8.4f center = %8.4f sigma = %8.4f : %20.12f => %6d " % 
+            (block_index, param, min_val, max_val, center, sigma, dequantized[0,0], indices[0]))
+            
 #######################################################################################################

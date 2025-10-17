@@ -1,4 +1,4 @@
-from utils.v3c.type    import NalUnitType, SeiPayloadType, VideoComponentId, V3CUnitType, Packing
+from utils.v3c.type    import NalUnitType, SeiPayloadType, VideoComponentId, V3CUnitType
 from utils.v3c.sei.sei import Sei
 
 #######################################################################################################
@@ -26,7 +26,7 @@ class SeiVideoTypeMappingRegistered(Sei):
         bitstream.write_bits(vtm_num_components_minus1, 7)                    # u(7)         
         for j, comp in enumerate( video.list_params ):
           component_id = VideoComponentId.from_param_name(comp).value
-          bitstream.write_bits(component_id, 6)                               # u(6) 
+          bitstream.write_bits(component_id, 7)                               # u(7) 
   
   #######################################################################################################       
 
@@ -40,7 +40,7 @@ class SeiVideoTypeMappingRegistered(Sei):
         vtm_num_components_minus1 = bitstream.read_bits(7)                    # u(7)
         vtm_component_id = []
         for j in range(vtm_num_components_minus1 + 1):
-          component_id = bitstream.read_bits(6)                               # u(6) 
+          component_id = bitstream.read_bits(7)                               # u(7) 
           vtm_component_id.append( VideoComponentId(component_id).get_param_names() )                
         # Store the video information in the group of frames
         type = V3CUnitType(vtm_video_type_id)        

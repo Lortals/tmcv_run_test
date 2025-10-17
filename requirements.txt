@@ -12,6 +12,7 @@ trimesh
 git+https://github.com/fraunhoferhhi/PLAS.git
 torch==2.4.0
 torchvision==0.19 
+pylint==4.0.1
 
 # pip install torch==2.4.0 torchvision==0.19 --index-url https://download.pytorch.org/whl/cu118
 # conda install -c conda-forge ffmpeg 

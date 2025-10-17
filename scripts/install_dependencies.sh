@@ -47,7 +47,7 @@ HMDIR=${DEPDIR}/HM-18.0-Dqp
 if [ $( uname ) == "Linux" ]
 then
   HMDQPENC=${HMDIR}/bin/TAppEncoderStatic
-  HMDEC=${HMDIR}/bin/TAppDecoderStatic
+  HMDQPDEC=${HMDIR}/bin/TAppDecoderStatic
 else
   HMDQPENC=${HMDIR}/bin/vs16/msvc-19.29/x86_64/release/TAppEncoder.exe  
   HMDQPDEC=${HMDIR}/bin/vs16/msvc-19.29/x86_64/release/TAppDecoder.exe  
@@ -61,14 +61,14 @@ then
 fi 
 
 # Build HM with 
-if [ ! -f ${HMENC} ]
+if [ ! -f ${HMDQPENC} ]
 then 
   mkdir ${HMDIR}/build   
   cmake -H${HMDIR} -B${HMDIR}/build -DHIGH_BITDEPTH=OFF
   cmake --build ${HMDIR}/build --config Release --parallel ${NUMBER_OF_PROCESSORS}
-  if [ $( uname ) == "Linux" ]; then chmod 755 ${HMENC} ${HMDEC}; fi
+  if [ $( uname ) == "Linux" ]; then chmod 755 ${HMDQPENC} ${HMDQPDEC}; fi
 else
-  echo "${HMENC} already exist"
+  echo "${HMDQPENC} already exist"
 fi
 
 ################################################################################# 

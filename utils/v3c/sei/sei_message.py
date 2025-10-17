@@ -40,7 +40,7 @@ class SeiMessage():
       byte = bitstream.read_bits(8)                                            # u(8)
       if byte == 0xff:
         payload_type += 0xff
-      else:
+      else: 
         payload_type += byte
         break
     payload_size = 0

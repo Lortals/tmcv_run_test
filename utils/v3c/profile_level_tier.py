@@ -36,7 +36,7 @@ class ProfileTierLevel:
     # if (ptl.getToolConstraintsPresentFlag()) {
     #   profileToolsetConstraintsInformation(
     #     ptl.getProfileToolsetConstraintsInformation(), bitstream);
-    # }
+    # } 
 
   def read(self, bitstream):
     self.tierFlag                 = bitstream.read_bits(1)                          # u(1)  
@@ -45,7 +45,7 @@ class ProfileTierLevel:
     self.profileReconstructionIdc = bitstream.read_bits(8)                          # u(8)  
     zero                          = bitstream.read_bits(16)                         # u(16) 
     self.maxDecodesIdc            = bitstream.read_bits(4)                          # u(4)  
-    fff                           = bitstream.read_bits(12)                         # u(12)   
+    ffff                          = bitstream.read_bits(12)                         # u(12)   
     self.levelIdc                 = bitstream.read_bits(8)                          # u(8)   
     self.numSubProfiles           = bitstream.read_bits(6)                          # u(6)   
     self.extendedSubProfileFlag   = bitstream.read_bits(1)                          # u(1)   

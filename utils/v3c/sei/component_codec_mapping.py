@@ -33,7 +33,7 @@ class SeiComponentCodecMapping(Sei):
     if ccm_component_codec_cancel_flag == 0:
       count_minus_1 = bitstream.read_bits(8)                        # u(8)
       for _ in range(count_minus_1 + 1):
-        codec_id  = bitstream.read_bits(8)                           # u(8)
+        codec_id  = bitstream.read_bits(8)                          # u(8)
         codec_4cc = bitstream.read_string()                         # st(v)
         gof.codecs.append( codec_4cc )
 

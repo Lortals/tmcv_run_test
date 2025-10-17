@@ -109,7 +109,7 @@ $ $ ../mpeg-3d-renderer/bin/windows/Release/PccAppRenderer.exe \
 ```bash
 $ python encode.py --help
 python encode.py -h
-usage: encode.py [-h] [-c CONFIG] [-i, INPUT] [-n NUM_FRAMES] [--first_frame FIRST_FRAME] [--bit_depth_pos BIT_DEPTH_POS] [--bit_depth_att BIT_DEPTH_ATT] [-b, BIN] [-r, REC] [--ascii] [--min_block_size MIN_BLOCK_SIZE] [--sort_params SORT_PARAMS] [--bd_0..31 BD_0..31]
+usage: encode.py [-h] [-c CONFIG] [-i, INPUT] [-n NUM_FRAMES] [--first_frame FIRST_FRAME] [-b, BIN] [-r, REC] [--ascii] [--min_block_size MIN_BLOCK_SIZE] [--sort_params SORT_PARAMS] [--bd_0..31 BD_0..31]
                  [--qp_0..31 QP_0..31] [--format_0..31 FORMAT_0..31] [--packing_0..31 PACKING_0..31] [--quant_0..31 QUANT_0..31] [--codec_0..31 CODEC_0..31] [--config_0..31 CONFIG_0..31] [--comp_0..31 COMP_0..31] [--trans_position TRANS_POSITION] [--gsc_mode GSC_MODE]
                  [-v] [--decode_only] [--bitstream_log] [--remove]
 
@@ -127,10 +127,6 @@ Input:
                         Number of frames
   --first_frame FIRST_FRAME
                         Index of the first frame
-  --bit_depth_pos BIT_DEPTH_POS
-                        Bit depth of input position
-  --bit_depth_att BIT_DEPTH_ATT
-                        Bit depth of input attribute
 
 Output:
   -b, BIN, --bin BIN    Output bin path
@@ -273,63 +269,6 @@ The configuration files are:
   -g 1 \
   -n 2
 ``` 
-
-# Example with quantified data
-
-## Pre-processing
-
-```bash
-for((i=0;i<2;i++)); do \
-  python  ../mpeg-gsc-tools/pre_post_processing/gs_pre_process.py \
-    -i  $( printf G:/gs/mpeg_20250707/m71763_bartender_stable/track_pos/frame%03d_pos.ply $i ) \
-    -o  $( printf frame%03d_q18-12.ply $i ) \
-    -c  $( printf frame%03d_q18-12.cfg $i ) ; \
-done
-```
-
-## Encode 
-
-```bash
-python.exe encode.py  \
-  -c              ./cfg/ffmpeg/mix_4_videos.cfg \
-  -i              frame%03d_q18-12.ply \
-  --bit_depth_pos 18 \
-  --bit_depth_att 12 \
-  -b              ./test/mix_4_videos/test.v3c \
-  --rec           ./test/mix_4_videos/test_rec_%04d.ply \
-  -n              2 \
-  -v
-```
-
-## Decode 
-
-```bash
- python.exe decode.py \
-  -b              test/mix_4_videos/test.v3c \
-  --dec           test/mix_4_videos/test_dec_%04d.ply \
-  -v
-```
-  
-## Post-process 
-
-```bash
-for((i=0;i<2;i++)); do \
-  python  ../mpeg-gsc-tools/pre_post_processing/gs_post_process.py \
-    -i $( printf ./test/mix_4_videos/test_dec_%04d.ply     $i ) \
-    -o $( printf ./test/mix_4_videos/test_dec_%04d_deq.ply $i ) \
-    -c $( printf frame%03d_q18-12.cfg $i ) ; \
-done
-``` 
-
-## Rendering
-
-```bash
-../mpeg-3d-renderer/bin/windows/Release/PccAppRenderer.exe \
-  -f ./test/mix_4_videos/test_dec_%04d_deq.ply \
-  -g 1 \
-  -n 2 \
-  --SrcFile=G:/gs/mpeg_20250707/m71763_bartender_stable/track_pos/frame000_pos.ply
-```
 
 # Test scripts
 
