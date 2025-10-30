@@ -25,8 +25,8 @@ def get_binary_path(codec, mode ):
   if codec not in binaries:
     raise ValueError(f"Unknown codec '{codec}'. Available: {', '.join(binaries.keys())}")      
   if mode not in binaries[codec]:
-    raise ValueError(f"Mode must be 'encoder' or 'decoder', not '{mode}'")
-  path = binaries[codec][mode]
+    raise ValueError(f"Mode must be 'encoder' or 'decoder', not '{mode}'")  
+  path = (Path(__file__).resolve().parent.parent  / binaries[codec][mode]).resolve()
   if not os.path.exists( fixpath( path ) ):
     print('Error: codec path is not correct: codec = %s mode = %s: %s ' % ( codec, mode, path))
     print('')

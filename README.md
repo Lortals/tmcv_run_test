@@ -40,7 +40,7 @@ The environment can be easily installed from the requirements.txt and environmen
 
    ```bash
    pip install torch==2.4.0 torchvision==0.19 --index-url https://download.pytorch.org/whl/cu118
-   conda install -c conda-forge ffmpeg
+   conda install -c conda-forge ffmpeg # install ffmpeg from ffmpeg.org 
    pip install -r requirements.txt
    ```
    

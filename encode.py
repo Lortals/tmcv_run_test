@@ -54,10 +54,11 @@ def parse_args():
   main = parser.add_argument_group('Pruning')
   main.add_argument('--gaussian_pruning',   help='Enable gaussian pruning',           default=False,          action='store_true' )
   main.add_argument('--cdf_thr',            help='CDF threshold for pruning',         default=0.99,           type=float )
+  main.add_argument('--colmap_path',        help='Path to COLMAP data',               default='',             type=str )
 
   main = parser.add_argument_group('Sorting')         
   main.add_argument('--min_block_size',     help='Minimum block size',                default=16,             type=int )
-  main.add_argument('--rectangular_sorting',help='Ensable rectangular sorting',       default=False,           action='store_true' )
+  main.add_argument('--rectangular_sorting',help='Ensable rectangular sorting',       default=False,          action='store_true' )
   main.add_argument('--sort_params',        help='sorting parameters',                default=['x', 'y', 'z', 'f_dc_0', 'f_dc_1', 'f_dc_2'], type=list )    
               
   main = parser.add_argument_group('Videos')
@@ -171,7 +172,6 @@ if __name__ == '__main__':
     print("output_dir = %s " % output_dir)
     print("Codecs     = ", codecs)
 
-
   #########################################################################################
   ######################################## Encoder ########################################
   ######################################################################################### 
@@ -196,10 +196,11 @@ if __name__ == '__main__':
                               verbose           = args.verbose )
 
     # Create group of pointclouds object
-    pcs = GroupOfPointclouds(path        = args.input,
-                             num_frames  = args.num_frames,
-                             start_frame = args.first_frame,
-                             verbose     = args.verbose)  
+    pcs = GroupOfPointclouds(pointcloud_path = args.input,
+                             colmap_path     = args.colmap_path,
+                             num_frames      = args.num_frames,
+                             start_frame     = args.first_frame,
+                             verbose         = args.verbose)  
 
     # Loop over frames for pruning
     if args.gaussian_pruning != 0:

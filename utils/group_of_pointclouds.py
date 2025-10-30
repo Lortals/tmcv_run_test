@@ -7,15 +7,16 @@ class GroupOfPointclouds:
 
   #######################################################################################################
 
-  def __init__(self, path: str, num_frames, start_frame=0, verbose=False):
+  def __init__(self, pointcloud_path: str, colmap_path:str, num_frames, start_frame=0, verbose=False):
     self.pointclouds = []
     self.cameras = []
     for frame_idx in range(start_frame, start_frame + num_frames) :
-      pointcloud = Pointcloud(path=path, index=frame_idx, verbose=verbose)
+      pointcloud = Pointcloud(path=pointcloud_path, index=frame_idx, verbose=verbose)
       self.pointclouds.append(pointcloud)
 
-      camera = Cameras(path, frame_idx, verbose)
-      self.cameras.append(camera)
+      if colmap_path:
+        camera = Cameras(path=colmap_path, index=frame_idx, verbose=verbose)
+        self.cameras.append(camera)
 
   #######################################################################################################
 

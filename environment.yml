@@ -8,9 +8,8 @@ dependencies:
   - python=3.10
 
   # GPU and ML libraries
-  - cudatoolkit=11.8
   - pytorch=2.4
-  - pytorch-cuda=11.8
+  - pytorch-cuda=12.1
   - torchvision=0.19
 
   # Common scientific stack
@@ -30,6 +29,12 @@ dependencies:
   - trimesh
   - rich  
   - ninja 
+  - cmake            
+  - setuptools
+  - wheel
+  - openpyxl
+  - commentjson
+  - bjontegaard
 
   - pip:
       - git+https://github.com/jyj0121/RectangularPLAS.git

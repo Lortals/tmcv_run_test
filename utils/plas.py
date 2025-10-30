@@ -93,6 +93,8 @@ def resize( pointcloud, num_points_gof, rectangular_sort=False, min_block_size=1
     sidelen_h = sidelen_w
   elif rectangular_sort:
     sidelen_h = num_points_gof // sidelen_w
+    if sidelen_h % 2 == 1:
+      sidelen_h -= 1
 
   pointcloud.sidelen_w = sidelen_w
   pointcloud.sidelen_h = sidelen_h

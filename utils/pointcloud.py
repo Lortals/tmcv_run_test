@@ -25,8 +25,7 @@ class Pointcloud:
   #######################################################################################################
 
   def read(self, path, index=0, verbose=False):            
-    ply_path = os.path.join(path, 'plys', 'frame_%04d.ply')
-    path = make_path( ply_path, index )        
+    path = make_path( path, index )
     if verbose:
       print("Reading point cloud from ", path)
     sys.stdout.flush()

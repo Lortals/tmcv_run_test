@@ -12,3 +12,6 @@ __pycache__/
 /test_*/
 
 /rec.yuv
+
+/utils/pruning/build
+/utils/pruning/pruning.egg-info

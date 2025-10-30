@@ -288,40 +288,42 @@ fi
 
 ################################################################################# 
 
-echo "HM       ENCODER BINARY PATH = ${HMENC}"
-echo "HM       DECODER BINARY PATH = ${HMDEC}"
-echo "HM-Dqp   ENCODER BINARY PATH = ${HMDQPENC}"
-echo "HM-Dqp   DECODER BINARY PATH = ${HMDQPDEC}"
-echo "HM-Rext  ENCODER BINARY PATH = ${HMREXTENC}"
-echo "HM-Rext  DECODER BINARY PATH = ${HMREXTDEC}"
-echo "VTM      ENCODER BINARY PATH = ${VTMENC}"
-echo "VTM      DECODER BINARY PATH = ${VTMDEC}"
-echo "VTM-Rext ENCODER BINARY PATH = ${VTMREXTENC}"
-echo "VTM-Rext DECODER BINARY PATH = ${VTMREXTDEC}"
+MAINDIR=$(dirname ${CURDIR})/
+echo "MAINDIR                      = ${MAINDIR}"
+echo "HM       ENCODER BINARY PATH = ${HMENC#$MAINDIR}"
+echo "HM       DECODER BINARY PATH = ${HMDEC#$MAINDIR}"
+echo "HM-Dqp   ENCODER BINARY PATH = ${HMDQPENC#$MAINDIR}"
+echo "HM-Dqp   DECODER BINARY PATH = ${HMDQPDEC#$MAINDIR}"
+echo "HM-Rext  ENCODER BINARY PATH = ${HMREXTENC#$MAINDIR}"
+echo "HM-Rext  DECODER BINARY PATH = ${HMREXTDEC#$MAINDIR}"
+echo "VTM      ENCODER BINARY PATH = ${VTMENC#$MAINDIR}"
+echo "VTM      DECODER BINARY PATH = ${VTMDEC#$MAINDIR}"
+echo "VTM-Rext ENCODER BINARY PATH = ${VTMREXTENC#$MAINDIR}"
+echo "VTM-Rext DECODER BINARY PATH = ${VTMREXTDEC#$MAINDIR}"
 
 # Save path in json file
 JSON_FILE="${DEPDIR}/binary_path.json"
 cat > "$JSON_FILE" <<EOF
 {
   "hm": {
-    "encoder": "${HMENC}",
-    "decoder": "${HMDEC}"
+    "encoder": "${HMENC#$MAINDIR}",
+    "decoder": "${HMDEC#$MAINDIR}"
   },
   "hmd": {
-    "encoder": "${HMDQPENC}",
-    "decoder": "${HMDQPDEC}"
+    "encoder": "${HMDQPENC#$MAINDIR}",
+    "decoder": "${HMDQPDEC#$MAINDIR}"
   },
   "hmr": {
-    "encoder": "${HMREXTENC}",
-    "decoder": "${HMREXTDEC}"
+    "encoder": "${HMREXTENC#$MAINDIR}",
+    "decoder": "${HMREXTDEC#$MAINDIR}"
   },
   "vtm": {
-    "encoder": "${VTMENC}",
-    "decoder": "${VTMDEC}"
+    "encoder": "${VTMENC#$MAINDIR}",
+    "decoder": "${VTMDEC#$MAINDIR}"
   },
   "vtr": {
-    "encoder": "${VTMREXTENC}",
-    "decoder": "${VTMREXTDEC}"
+    "encoder": "${VTMREXTENC#$MAINDIR}",
+    "decoder": "${VTMREXTDEC#$MAINDIR}"
   }
 }
 EOF
