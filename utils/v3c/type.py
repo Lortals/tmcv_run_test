@@ -348,6 +348,7 @@ class SeiPayloadType(Enum):
   VIDEO_TYPE_MAPPING_REGISTERED     = 194
   DEQUANTIZATION_MAPPING_REGISTERED = 195
   INPUT_CAMERA_INFORMATION          = 196
+  PCA_SH_AC_REGISTERED              = 197
 
 #######################################################################################################
 ################################### Sei payload type ##################################################

@@ -1,4 +1,4 @@
-name: v3c_gsc_video
+name: v3c_gsc_video_integration_152_test
 channels:
   - pytorch
   - nvidia
@@ -28,6 +28,9 @@ dependencies:
   - ffmpeg-python  # Python wrapper
   - bitarray
   - trimesh
+  - rich  
+  - ninja 
 
   - pip:
-      - git+https://github.com/fraunhoferhhi/PLAS.git
+      - git+https://github.com/jyj0121/RectangularPLAS.git
+      - ./utils/pruning  

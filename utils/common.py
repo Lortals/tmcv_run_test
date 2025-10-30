@@ -195,28 +195,62 @@ def linear_normalize(values, bitdepth ):
 
 #######################################################################################################
 
-def min_num_gaussian_in_gof(path, first_frame=0, num_frames=1, verbose=False):
+def min_num_gaussian_in_gof(path=None, first_frame=0, num_frames=1, pc_group=None, verbose=False):
   num_points = 2 ** 31 - 1
-  for index in range(first_frame, first_frame + num_frames):    
-    filename = make_path(path, index)
-    if verbose:
-      print("Reading file:", filename, flush=True)
-    with open(filename, "rb") as f:
-      while True:
-        line = f.readline()
-        if not line:
-          break  # End of file (should not happen in header)
-        try:
-          line = line.decode("ascii")
-        except UnicodeDecodeError:
-          continue  # Ignore undecodable lines (shouldn't happen in header)
-        if line.startswith("element vertex"):
-          num_points = min(num_points, int(line.strip().split()[-1]))
-          break
-        if line.startswith("end_header"):
-          break  # Stop if we reach end of header
+  if pc_group is not None:
+    for pc in pc_group.pointclouds:
+      num_points = min(num_points, len(pc.df))
+  else:
+    for index in range(first_frame, first_frame + num_frames):
+      filename = make_path(path, index)
+      if verbose:
+        print("Reading file:", filename, flush=True)
+      with open(filename, "rb") as f:
+        while True:
+          line = f.readline()
+          if not line:
+            break
+          try:
+            line = line.decode("ascii")
+          except UnicodeDecodeError:
+            continue
+          if line.startswith("element vertex"):
+            num_points = min(num_points, int(line.strip().split()[-1]))
+            break
+          if line.startswith("end_header"):
+            break
   if verbose:
     print("Minimum number of points in GoF: %9d " % num_points, flush=True)
+  return num_points
+
+#######################################################################################################
+
+def max_num_gaussian_in_gof(path=None, first_frame=0, num_frames=1, pc_group=None, verbose=False):
+  num_points = 0
+  if pc_group is not None:
+    for pc in pc_group.pointclouds:
+      num_points = max(num_points, len(pc.df))
+  else:
+    for index in range(first_frame, first_frame + num_frames):
+      filename = make_path(path, index)
+      if verbose:
+        print("Reading file:", filename, flush=True)
+      with open(filename, "rb") as f:
+        while True:
+          line = f.readline()
+          if not line:
+            break
+          try:
+            line = line.decode("ascii")
+          except UnicodeDecodeError:
+            continue
+          if line.startswith("element vertex"):
+            num_points = max(num_points, int(line.strip().split()[-1]))
+            break
+          if line.startswith("end_header"):
+            break
+  if verbose:
+    print("Maximum number of points in GoF: %9d " % num_points, flush=True)
   return num_points
 
 #######################################################################################################

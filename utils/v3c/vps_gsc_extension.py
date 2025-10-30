@@ -1,4 +1,5 @@
 from utils.v3c.type  import V3CUnitType, Packing, Format, ColorStandard
+import numpy as np
 
 #######################################################################################################
 ################################### vps gsc extension #################################################
@@ -50,6 +51,27 @@ class VpsGscExtension:
         max_value = video.max[j]    
         bitstream.write_float(min_value)                                    # f(32)
         bitstream.write_float(max_value)                                    # f(32)
+    
+    sh_pca_flag = gof.sh_pca_flag
+    bitstream.write_bits(sh_pca_flag, 1)                                    # u(1)
+    if sh_pca_flag:
+      sh_pca_orig_dims = gof.sh_pca_original_dims
+      sh_pca_reduced_dims = gof.sh_pca_reduced_dims
+      bitstream.write_bits(sh_pca_orig_dims, 6)                             # u(6)
+      bitstream.write_bits(sh_pca_reduced_dims, 6)                          # u(6)
+      num_frames = len(gof.sh_pca_per_frame)
+      bitstream.write_bits(num_frames, 16)                                  # u(16)
+      for frame_data in gof.sh_pca_per_frame:
+        sh_pca_proj_comps = frame_data['sh_pca_proj_comps']
+        sh_pca_mean = frame_data['sh_pca_mean']
+        sh_pca_std = frame_data['sh_pca_std']
+        for i in range(sh_pca_orig_dims):
+          for j in range(sh_pca_reduced_dims):
+            bitstream.write_float(sh_pca_proj_comps[i, j])                   # f(32)
+        for i in range(sh_pca_orig_dims):
+          bitstream.write_float(sh_pca_mean[i])                              # f(32)
+        for i in range(sh_pca_orig_dims):
+          bitstream.write_float(sh_pca_std[i])                               # f(32)
   
   #######################################################################################################
 
@@ -90,5 +112,32 @@ class VpsGscExtension:
         max_value = bitstream.read_float()                                  # f(32)
         gof.videos[type].min[j] = min_value
         gof.videos[type].max[j] = max_value
+  
+    sh_pca_flag = bitstream.read_bits(1)                                    # u(1)
+    gof.sh_pca_flag = sh_pca_flag
+    if sh_pca_flag:
+      sh_pca_orig_dims = bitstream.read_bits(6)                             # u(6)
+      sh_pca_reduced_dims = bitstream.read_bits(6)                          # u(6)
+      gof.sh_pca_original_dims = sh_pca_orig_dims
+      gof.sh_pca_reduced_dims = sh_pca_reduced_dims
+      num_frames = bitstream.read_bits(16)                                  # u(16)
+      for frame_idx in range(num_frames):
+        sh_pca_proj_comps = np.zeros((sh_pca_orig_dims, sh_pca_reduced_dims))
+        for i in range(sh_pca_orig_dims):
+          for j in range(sh_pca_reduced_dims):
+            sh_pca_proj_comps[i, j] = bitstream.read_float()                 # f(32)
 
+        sh_pca_mean = np.zeros(sh_pca_orig_dims)
+        for i in range(sh_pca_orig_dims):
+          sh_pca_mean[i] = bitstream.read_float()                            # f(32)
+
+        sh_pca_std = np.zeros(sh_pca_orig_dims)
+        for i in range(sh_pca_orig_dims):
+          sh_pca_std[i] = bitstream.read_float()                             # f(32)
+
+        gof.sh_pca_per_frame.append({
+          'sh_pca_proj_comps': sh_pca_proj_comps,
+          'sh_pca_mean': sh_pca_mean,
+          'sh_pca_std': sh_pca_std
+        })
 #######################################################################################################

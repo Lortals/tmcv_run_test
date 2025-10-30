@@ -66,27 +66,41 @@ def init_device(verbose = False):
 
 #######################################################################################################
 
-def prune_gaussians(pointcloud, num_points):
-  """Very crude pruning method that uses scaling and opacity to determine the impact of a Gaussian splat.
-  We need this method to drop a few Gaussians to make them fit a square image.
+def prune_gaussians(pointcloud, num_points, verbose=False):
+  original_count = len(pointcloud.df)
 
-  For a more sophisticated method, see e.g. "LightGaussian: Unbounded 3D Gaussian Compression with 15x Reduction and 200+ FPS"
-  https://arxiv.org/abs/2311.17245
-  """
-  opacity_act = lambda x: 1 / (1 + np.exp(-x))
-  pointcloud.df["impact"] = np.exp((pointcloud.df["scale_0"] + pointcloud.df["scale_1"] + pointcloud.df["scale_2"]).astype(np.float64)) \
-                    * opacity_act(pointcloud.df["opacity"].astype(np.float64))
-  pointcloud.df = pointcloud.df.sort_values("impact", ascending=False)
-  pointcloud.df = pointcloud.df.head(num_points)   
+  if 'importance_score' in pointcloud.df.columns:
+    pointcloud.df = pointcloud.df.sort_values("importance_score", ascending=False)
+  else:
+    opacity_act = lambda x: 1 / (1 + np.exp(-x))
+    pointcloud.df["impact"] = np.exp((pointcloud.df["scale_0"] + pointcloud.df["scale_1"] + pointcloud.df["scale_2"]).astype(np.float64)) \
+                      * opacity_act(pointcloud.df["opacity"].astype(np.float64))
+    pointcloud.df = pointcloud.df.sort_values("impact", ascending=False)
+
+  pointcloud.df = pointcloud.df.head(num_points)
+  pruned_count = original_count - num_points
+
+  if verbose:
+    prune_pct = (pruned_count / original_count * 100) if original_count > 0 else 0
+    print("[Sorting] %d / %d gaussians pruned (%.2f%%) to fit the grid size" % (pruned_count, original_count, prune_pct))  
+
+#######################################################################################################
+
+def resize( pointcloud, num_points_gof, rectangular_sort=False, min_block_size=16, verbose=False):
+  n = int(np.sqrt(num_points_gof))
+  sidelen_w = n // min_block_size * min_block_size
+  if not rectangular_sort:
+    sidelen_h = sidelen_w
+  elif rectangular_sort:
+    sidelen_h = num_points_gof // sidelen_w
+
+  pointcloud.sidelen_w = sidelen_w
+  pointcloud.sidelen_h = sidelen_h
+    
+  prune_gaussians(pointcloud, sidelen_w * sidelen_h, verbose)    
 
 #######################################################################################################
 
-def resize( pointcloud, num_points_gof, min_block_size=16, verbose=False ):
-  pointcloud.sidelen = int(np.sqrt(num_points_gof))
-  pointcloud.sidelen = pointcloud.sidelen // min_block_size * min_block_size
-  prune_gaussians( pointcloud, pointcloud.sidelen * pointcloud.sidelen)        
-
-#######################################################################################################
 
 def prepare_tensor(pointcloud, 
                    param_list, 
@@ -133,9 +147,10 @@ def prepare_tensor(pointcloud,
 
 #######################################################################################################
 
-def sort( pointcloud, 
-          num_points_gof,
+def sort( pointcloud,
+          rectangular_sorting,  
           sort_params,   
+          num_points_gof,
           min_block_size, 
           bitdepth_xyz, 
           bitdepth_opacity, 
@@ -148,9 +163,10 @@ def sort( pointcloud,
           verbose=False): 
 
   lock = FileLock()
-  lock.acquire() 
+  lock.acquire()
 
-  resize(pointcloud, num_points_gof, min_block_size, verbose)
+  resize(pointcloud, num_points_gof, rectangular_sorting, min_block_size, verbose=verbose)
+
   params = prepare_tensor(pointcloud,
                           sort_params, 
                           bitdepth_xyz, 
@@ -162,8 +178,8 @@ def sort( pointcloud,
                           trans_position,
                           device, 
                           verbose) 
-  params_torch_grid = params.permute(1, 0).reshape(-1, pointcloud.sidelen, pointcloud.sidelen)
-  _, sorted_grid_indices = sort_with_plas(params_torch_grid, min_block_size, improvement_break=1e-4, verbose=False)
+  params_torch_grid = params.permute(1, 0).reshape(-1, pointcloud.sidelen_h, pointcloud.sidelen_w)
+  _, sorted_grid_indices = sort_with_plas(params_torch_grid, min_block_size, improvement_break=1e-4, verbose=True)
   sorted_indices = sorted_grid_indices.flatten().cpu().numpy()
   pointcloud.df = pointcloud.df.iloc[sorted_indices]
   

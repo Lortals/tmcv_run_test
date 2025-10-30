@@ -94,10 +94,17 @@ if __name__ == '__main__':
     gof_dec.print( "dec" )
     print("num decoded frames  = %2d " % ( gof_dec.num_frames('dec') ) )
 
-  # Decoder 
+  # Decoder
   for frame_index in range(gof_dec.num_frames('dec')):
-    # Decode pointcloud
-    dec = gof_dec.get_pointcloud( frame_index, args.verbose )
+    # Get decoded pointcloud
+    dec = gof_dec.get_pointcloud(frame_index, args.verbose)
+
+    # Load PCA metadata and reconstruct SH AC coefficients
+    gof_dec.inv_pca_sh_ac(dec, frame_index, verbose=args.verbose)
+    
+    # Inverse PCA to SH AC coefficients
+    if gof_dec.sh_pca_flag:
+      dec.inv_pca_sh_ac(verbose=args.verbose)
 
     # Dec color conversion
     if gof_dec.src_sh_conversion != ColorStandard.NONE:
@@ -105,11 +112,14 @@ if __name__ == '__main__':
 
     # Quaternion denormalization
     if not 'rot_0' in [p for v in gof_dec.videos.values() for p in getattr(v, "list_params", None)]:
-      dec.reconstruct_quat(verbose=args.verbose)      
+      dec.reconstruct_quat(verbose=args.verbose)
 
-    # Save decoded pointcloud    
-    dec.write(args.dec if args.dec != '' else ( remove_extension(args.bin) + '_%04d_dec.ply'), 
-              args.first_frame + frame_index, ascii=args.ascii, verbose=args.verbose )
+    # Save decoded pointcloud
+    if args.verbose:
+      dec.print("PC_dec", num = 1)
+
+    dec.write(args.dec if args.dec != '' else (remove_extension(args.bin) + '_%04d_dec.ply'),
+              args.first_frame + frame_index, ascii=args.ascii, verbose=args.verbose)
 
   # Stat
   gof_dec.stat.log()

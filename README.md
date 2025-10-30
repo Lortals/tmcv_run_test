@@ -19,7 +19,7 @@ Main features:
 - Required libraries (install via `pip`):
   - `numpy`
   - `pandas` (if applicable)
-  - `plat`
+  - `plas`
   - Any other dependencies listed in `requirements.txt`
 
 # Installation
@@ -40,17 +40,21 @@ The environment can be easily installed from the requirements.txt and environmen
 
    ```bash
    pip install torch==2.4.0 torchvision==0.19 --index-url https://download.pytorch.org/whl/cu118
-   conda install -c conda-forge ffmpeg # install ffmpeg from ffmpeg.org 
+   conda install -c conda-forge ffmpeg
    pip install -r requirements.txt
    ```
    
-### Conda
+### Conda (Recommended)
 
   ```bash
   conda env create -f environment.yml
-  conda activate v3c_gsc_video
-  conda deactivate
+  conda activate v3c_gsc_video_integration_152
   ```
+
+This will automatically install:
+- PyTorch 2.4 with CUDA 11.8 support
+- All required Python dependencies
+- CUDA pruning utilities (compiled from `utils/pruning/`)
 
 ### PLAS
 

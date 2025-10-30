@@ -22,18 +22,22 @@ class GroupOfFrames:
 
   #######################################################################################################
 
-  def __init__(self, index=0, codecs=None, src_sh_conversion=ColorStandard.NONE): 
-    self.index             = index
-    self.videos            = {}
-    self.stat              = Stat()
-    self.codecs            = codecs if codecs is not None else []
-    self.fps               = 30 
-    self.block_width       = 0
-    self.block_height      = 0  
-    self.src_sh_conversion = src_sh_conversion
-    self.camera_df         = None
-
-  #######################################################################################################
+  def __init__(self, index=0, codecs=None, src_sh_conversion=ColorStandard.NONE, pca_sh_ac=False): 
+    self.index                 = index
+    self.videos                = {}
+    self.stat                  = Stat()
+    self.codecs                = codecs if codecs is not None else []
+    self.fps                   = 30 
+    self.block_width           = 0
+    self.block_height          = 0  
+    self.src_sh_conversion     = src_sh_conversion
+    self.camera_df             = None
+    self.sh_pca_flag           = pca_sh_ac
+    self.sh_pca_original_dims  = 0
+    self.sh_pca_reduced_dims   = 0
+    self.sh_pca_per_frame      = []
+    
+#######################################################################################################
 
   def create_video(self, video_index, list_params, bitdepth, bitdepth_pos, qp, codec_id, format, packing, quantization, 
                    trans_position, sh_conversion, subsampling, verbose=False):
@@ -55,24 +59,65 @@ class GroupOfFrames:
   #######################################################################################################
 
   def set_video(self, pointcloud, verbose=False):
-    self.block_width  = pointcloud.sidelen
-    self.block_height = pointcloud.sidelen  
+    self.block_width  = pointcloud.sidelen_w
+    self.block_height = pointcloud.sidelen_h
     self.camera_df    = pointcloud.camera_df
+
+    if self.sh_pca_flag and len(self.sh_pca_per_frame) == 1:
+      cols = [c for c in pointcloud.df.columns if c.startswith('f_rest_')]
+      for vtype, vid in self.videos.items():
+        if any(p.startswith('f_rest_') for p in vid.list_params):
+          vid.list_params = [p for p in vid.list_params if not p.startswith('f_rest_')] + cols
+          vid.set_grid_size(self.block_width, self.block_height)
+
     for _, (_, video) in enumerate(self.videos.items()):
       if verbose:
         print("set_video %-10s %10s %10s list_params = " % ( video.type.name, video.format.name, video.packing.name ), video.name(True))
-      video.pack_one_frame( pointcloud=pointcloud, verbose=verbose )
+      video.pack_one_frame(pointcloud=pointcloud, verbose=verbose)
 
   #######################################################################################################
 
-  def get_pointcloud( self, frame_index, verbose=False ):
-    num_points = self.block_width * self.block_height
-    pointcloud = Pointcloud(num_points=num_points)
-    for _, (_, video) in enumerate(self.videos.items()):      
-      video.get_pointcloud( frame_index, pointcloud, verbose )
+  def pca_sh_ac(self, pointcloud):
+    if self.sh_pca_flag is True:
+      pca_result = pointcloud.pca_result
+
+      if self.sh_pca_original_dims == 0 or self.sh_pca_reduced_dims == 0:
+        self.sh_pca_original_dims = pca_result['sh_pca_original_dims']
+        self.sh_pca_reduced_dims = pca_result['sh_pca_reduced_dims']
+
+      self.sh_pca_per_frame.append({k: pca_result[k] for k in ['sh_pca_proj_comps', 'sh_pca_mean', 'sh_pca_std']})
+
+  #######################################################################################################
+
+  def inv_pca_sh_ac(self, pointcloud, frame_idx, verbose=False):
+    if self.sh_pca_flag:
+      fm = self.sh_pca_per_frame[frame_idx]
+      pointcloud.pca_result = fm
+
+  #######################################################################################################
+
+  def get_pointcloud(self, frame_index, verbose=False):
+    pc = Pointcloud()
+
+    sh_params = [p for v in self.videos.values() for p in v.list_params if p.startswith('f_rest_')]
+    
+    if sh_params:
+      default_sh = [c for c in pc.ply_columns if c.startswith('f_rest_')]
+      pc.ply_columns = [c for c in pc.ply_columns if not c.startswith('f_rest_')]
+      pc.df = pc.df.drop(columns=[c for c in pc.df.columns if c.startswith('f_rest_')])
+
+      sorted_sh = sorted(set(sh_params), key=lambda x: int(x.split('_')[2]))
+      pc.ply_columns.extend(sorted_sh)
+      for sh in sorted_sh:
+        pc.df[sh] = 0.0
+
+    for _, video in self.videos.items():
+      video.get_pointcloud(frame_index, pc, verbose)
+
     if self.camera_df is not None and not self.camera_df.empty:
-      pointcloud.camera_df = self.camera_df
-    return pointcloud
+      pc.camera_df = self.camera_df
+
+    return pc
 
   #######################################################################################################
   
@@ -366,8 +411,9 @@ class GroupOfFrames:
     sei = []
     sei.append( Sei.create( SeiPayloadType.COMPONENT_CODEC_MAPPING  ) )
     sei.append( Sei.create( SeiPayloadType.VIDEO_TYPE_MAPPING_REGISTERED ) )
-    # sei.append( Sei.create( SeiPayloadType.DEQUANTIZATION_MAPPING_REGISTERED ) )   
-    sei.append( Sei.create( SeiPayloadType.GSC_REGISTERED ) )    
+    # sei.append( Sei.create( SeiPayloadType.DEQUANTIZATION_MAPPING_REGISTERED ) )
+    sei.append( Sei.create( SeiPayloadType.GSC_REGISTERED ) )
+    sei.append( Sei.create( SeiPayloadType.PCA_SH_AC_REGISTERED ) )
     if add_camera_position_sei and self.camera_df is not None and not self.camera_df.empty:
       sei.append( Sei.create( SeiPayloadType.INPUT_CAMERA_INFORMATION ) )
 

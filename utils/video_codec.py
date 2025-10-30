@@ -97,6 +97,7 @@ def encode_hm(name, index, output_dir, video, codec, config, qp, dqp, verbose=Fa
     '--OutputBitDepth='        + str( max( video.bits, 8 ) ),
     '--QP='                    + str( qp ),
     '--ReconFile='             + 'NUL' if platform.system() == 'Windows' else '/dev/null',
+    '--ConformanceWindowMode=1',
     '--ExtendedPrecision=0',
     '--IntraReferenceSmoothing=1',
     '--SEIDecodedPictureHash=1'

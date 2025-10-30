@@ -224,8 +224,8 @@ class VideoData:
   #######################################################################################################
 
   def pack_one_frame(self, pointcloud, list_params=None, verbose=False):
-    self.block_width    = pointcloud.sidelen  
-    self.block_height   = pointcloud.sidelen  
+    self.block_width    = pointcloud.sidelen_w  
+    self.block_height   = pointcloud.sidelen_h  
     self.width          = self.block_width  * self.grid_width
     self.height         = self.block_height * self.grid_height   
     self.num_components = 1 if self.format == Format.YUV400 else 3
@@ -236,12 +236,12 @@ class VideoData:
           self.block_width, self.block_height, self.width, self.height) )
     for i, id in enumerate(self.list_params if list_params is None else list_params):
       if id not in { 'zero', 'x_add', 'y_add', 'z_add' }:
-        data = pointcloud.df[id].values.reshape(pointcloud.sidelen, pointcloud.sidelen, -1)
+        data = pointcloud.df[id].values.reshape(pointcloud.sidelen_h, pointcloud.sidelen_w, -1)
         data = data[:,:,0]
         if self.trans_position == 1 and id in ['x', 'y', 'z']:
           data = log_transform( data ) 
       else:
-        data = np.zeros((pointcloud.sidelen, pointcloud.sidelen), dtype=np.float32)
+        data = np.zeros((pointcloud.sidelen_h, pointcloud.sidelen_w), dtype=np.float32)
       f, x, y, c = self.get_pack_position(i)
       if f != num_frames:
         self.video_src.add_empty_frame( width=self.width,  height=self.height, bits=32, format=self.format.video_name(), verbose=verbose ) 

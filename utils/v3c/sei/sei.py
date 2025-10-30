@@ -27,12 +27,14 @@ class Sei():
     from utils.v3c.sei.video_type_mapping_registered      import SeiVideoTypeMappingRegistered
     from utils.v3c.sei.input_camera_information           import SeiInputCameraInformation
     from utils.v3c.sei.dequantization_mapping_registered  import SeiDequantizationMappingRegistered
+    from utils.v3c.sei.pca_sh_ac_registered               import SeiPcaShAcRegistered
     sei_map = {
       SeiPayloadType.GSC_REGISTERED:                    SeiGscRegistered,
       SeiPayloadType.COMPONENT_CODEC_MAPPING:           SeiComponentCodecMapping,
       SeiPayloadType.VIDEO_TYPE_MAPPING_REGISTERED:     SeiVideoTypeMappingRegistered,
       SeiPayloadType.DEQUANTIZATION_MAPPING_REGISTERED: SeiDequantizationMappingRegistered,
       SeiPayloadType.INPUT_CAMERA_INFORMATION:          SeiInputCameraInformation,
+      SeiPayloadType.PCA_SH_AC_REGISTERED:              SeiPcaShAcRegistered,
     }
     sei_class = sei_map.get(sei_payload_type)
     if sei_class is None:

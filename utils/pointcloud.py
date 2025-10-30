@@ -3,9 +3,10 @@ import os
 import sys
 import numpy as np
 import pandas as pd
-import trimesh 
+import trimesh
 from plyfile import PlyData, PlyElement
 from utils.common import make_path
+from utils.pruning.pruning import calculate_importance_score, prune_by_cdf_threshold
 
 #######################################################################################################
 
@@ -24,7 +25,8 @@ class Pointcloud:
   #######################################################################################################
 
   def read(self, path, index=0, verbose=False):            
-    path = make_path( path, index )
+    ply_path = os.path.join(path, 'plys', 'frame_%04d.ply')
+    path = make_path( ply_path, index )        
     if verbose:
       print("Reading point cloud from ", path)
     sys.stdout.flush()
@@ -133,11 +135,20 @@ class Pointcloud:
       print(f" scl  = {self.df['scale_0'].values[i]:8.4f} {self.df['scale_1'].values[i]:8.4f} {self.df['scale_2'].values[i]:8.4f} ")
       print(f" rot  = {self.df['rot_0'].values[i]:8.4f} {self.df['rot_1'].values[i]:8.4f} {self.df['rot_2'].values[i]:8.4f} {self.df['rot_3'].values[i]:8.4f} ")
       print(f" dc   = {self.df['f_dc_0'].values[i]:8.4f} {self.df['f_dc_1'].values[i]:8.4f} {self.df['f_dc_2'].values[i]:8.4f} " )
-      for j in range(15):
-        r = self.df[f"f_rest_{j +  0}"].values[i]
-        g = self.df[f"f_rest_{j + 15}"].values[i]
-        b = self.df[f"f_rest_{j + 30}"].values[i]
-        print(f" sh{j:02d} = {r:8.4f} {g:8.4f} {b:8.4f}")
+
+      f_rest_cols = [c for c in self.df.columns if c.startswith('f_rest_')]
+      num_f_rest = len(f_rest_cols)
+
+      if num_f_rest < 45:
+        for j in range(num_f_rest):
+          val = self.df[f"f_rest_{j}"].values[i]
+          print(f" sh{j:02d} = {val:8.4f}")
+      else:
+        for j in range(15):
+          r = self.df[f"f_rest_{j +  0}"].values[i]
+          g = self.df[f"f_rest_{j + 15}"].values[i]
+          b = self.df[f"f_rest_{j + 30}"].values[i]
+          print(f" sh{j:02d} = {r:8.4f} {g:8.4f} {b:8.4f}")
     if num_points > 0: 
       print("min/max xyz = [%f;%f][%f;%f][%f;%f]" % ( self.df['x'].values.min(), self.df['x'].values.max(), self.df['y'].values.min(),
                                                       self.df['y'].values.max(), self.df['z'].values.min(), self.df['z'].values.max() ))
@@ -339,3 +350,69 @@ class Pointcloud:
             (i, w[i], x[i], y[i], z[i], Q[i,0], Q[i,1], Q[i,2], Q[i,3]))
 
 #######################################################################################################
+
+  def pca_sh_ac(self, var_thr, n_comp, verbose=False):
+    cols = [c for c in self.df.columns if c.startswith('f_rest_')]
+    if not 0 < var_thr <= 1:
+      raise ValueError("Variance threshold must be in (0, 1], got %.2f" % var_thr)
+
+    data = self.df[cols].values
+    n_pts, n_orig = data.shape
+
+    mean = np.mean(data, axis=0)
+    std = np.where((s := np.std(data, axis=0)) == 0, 1, s)
+    norm = (data - mean) / std
+
+    _, s_vals, Vt = np.linalg.svd(norm, full_matrices=False)
+    cum_var = np.cumsum((s_vals ** 2 / (n_pts - 1)) / np.sum(s_vals ** 2 / (n_pts - 1)))
+
+    n_comp = np.argmax(cum_var >= var_thr) + 1 if n_comp == 0 else min(n_comp, min(n_pts, n_orig))
+    comps = Vt[:n_comp]
+    reduced = norm @ comps.T
+
+    self.df = self.df.drop(columns=cols)
+    for i in range(n_comp):
+      self.df['f_rest_%d' % i] = reduced[:, i]
+
+    self.ply_columns = [c for c in self.ply_columns if not c.startswith('f_rest_')] + \
+                       ['f_rest_%d' % i for i in range(n_comp)]
+
+    self.pca_result = {'sh_pca_original_dims': n_orig, 'sh_pca_reduced_dims': n_comp,
+                       'sh_pca_proj_comps': comps.T, 'sh_pca_mean': mean, 'sh_pca_std': std}
+
+    if verbose:
+      print("[PCA SH AC] SH AC coefficients are reduced from %d to %d dims" % (n_orig, n_comp))
+
+
+  #######################################################################################################
+
+  def inv_pca_sh_ac(self, verbose=False):
+    pca_columns = [col for col in self.df.columns if col.startswith('f_rest_')]
+    pca_metadata = self.pca_result
+    pca_data = self.df[pca_columns].values
+
+    components = pca_metadata['sh_pca_proj_comps']
+    mean = pca_metadata['sh_pca_mean']
+    std = pca_metadata['sh_pca_std']
+
+    n_reduced = pca_data.shape[1]
+    n_orig = components.shape[0]
+
+    reconstructed = (pca_data @ components.T) * std + mean
+
+    self.df = self.df.drop(columns=pca_columns)
+    for i in range(reconstructed.shape[1]):
+      self.df[f'f_rest_{i}'] = reconstructed[:, i]
+
+    non_sh = [col for col in self.ply_columns if not col.startswith('f_rest_')]
+    self.ply_columns = non_sh + [f'f_rest_{i}' for i in range(reconstructed.shape[1])]
+
+    if verbose:
+      print("[PCA SH AC] SH AC coefficients are reconstructed to %d from %d dims" % (n_reduced, n_orig))
+
+  #######################################################################################################
+
+  def prune_by_importance(self, cameras, cdf_thr, verbose=False):
+    self.df['importance_score'] = calculate_importance_score(self, cameras)
+    if cdf_thr < 1.0:
+      prune_by_cdf_threshold(self, cdf_thr, verbose)
