@@ -107,11 +107,11 @@ def encode_hm(name, index, output_dir, video, codec, config, qp, dqp, verbose=Fa
     cmd.append('--dQPFile=' + to_bash_path(dqp))
   # cmd.append(  '--ReconFile=' + recName )  
   if verbose:
-    print( reformat(  ' '.join( cmd ) )  )
+    print( reformat(' '.join(map(str, cmd)))  )
   with open(log_path, 'w', encoding='utf-8') as logfile:
     result = subprocess.run(cmd, stdout=logfile, stderr=subprocess.STDOUT, text=True, check=True)
     if result.returncode != 0:
-      print("Command failed: ", reformat(  ' '.join( cmd ) ) ) 
+      print("Command failed: ", reformat(' '.join(map(str, cmd))) ) 
       raise RuntimeError("Video encoding failed")           
     with open(log_path, 'r', encoding='utf-8') as logfile:
       for line in logfile:
@@ -139,12 +139,12 @@ def decode_hm(name, index, output_dir, bitstream, width, height, fps, bits, form
     '--OutputBitDepth=' + str( max( bits, 8 ) )
   ]
   if verbose:
-    print( ' '.join( cmd ) )
+    print( reformat(' '.join(map(str, cmd))) )
 
   with open(log_path, 'w', encoding='utf-8') as logfile:
     result = subprocess.run(cmd, stdout=logfile, stderr=subprocess.STDOUT, text=True, check=True)
     if result.returncode != 0:
-      print("Command failed: ", reformat(  ' '.join( cmd ) ) ) 
+      print("Command failed: ", reformat(' '.join(map(str, cmd))) ) 
       raise RuntimeError("Video decoding failed")           
   if verbose:
     with open(log_path, 'r', encoding='utf-8') as logfile:
@@ -196,11 +196,11 @@ def encode_vtm(name, index, output_dir, video, codec, config, qp, verbose=False)
       "--TemporalSubsampleRatio=1" ]
   # cmd.append(  '--ReconFile=' + recName )
   if verbose:
-    print( ' '.join( cmd ) )        
+    print( reformat(' '.join(map(str, cmd))) )        
   with open(log_path, 'w', encoding='utf-8') as logfile:
     result = subprocess.run(cmd, stdout=logfile, stderr=subprocess.STDOUT, text=True, check=True)    
     if result.returncode != 0:
-      print("Command failed: ", reformat(  ' '.join( cmd ) ) ) 
+      print("Command failed: ", reformat(' '.join(map(str, cmd))) ) 
       raise RuntimeError("Video encoding failed")           
   if verbose:
     with open(log_path, 'r', encoding='utf-8') as logfile:
@@ -225,11 +225,11 @@ def decode_vtm(name, index, output_dir, bitstream, width, height, fps, bits, for
       '--OutputBitDepth=' + str( max( bits, 8 ) )
   ]
   if verbose:
-    print( ' '.join( cmd ) )
+    print( reformat(' '.join(map(str, cmd))) )
   with open(log_path, 'w', encoding='utf-8') as logfile:
     result = subprocess.run(cmd, stdout=logfile, stderr=subprocess.STDOUT, text=True, check=True)    
     if result.returncode != 0:
-      print("Command failed: ", reformat(  ' '.join( cmd ) ) ) 
+      print("Command failed: ", reformat(' '.join(map(str, cmd))) ) 
       raise RuntimeError("Video encoding failed")           
   if verbose:
     with open(log_path, 'r', encoding='utf-8') as logfile:
