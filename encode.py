@@ -59,7 +59,8 @@ def parse_args():
   main = parser.add_argument_group('Sorting')         
   main.add_argument('--min_block_size',     help='Minimum block size',                default=16,             type=int )
   main.add_argument('--rectangular_sorting',help='Ensable rectangular sorting',       default=False,          action='store_true' )
-  main.add_argument('--sort_params',        help='sorting parameters',                default=['x', 'y', 'z', 'f_dc_0', 'f_dc_1', 'f_dc_2'], type=list )    
+  main.add_argument('--sort_params',        help='sorting parameters',                default=['x', 'y', 'z', 'f_dc_0', 'f_dc_1', 'f_dc_2'], type=list )   
+  main.add_argument('--sort_with_shac',    help='Add spherical harmonics AC components to sorting parameters', default=False, action='store_true' ) 
               
   main = parser.add_argument_group('Videos')
   main.add_argument('--bd_0..31',           help='Bitdepht values for nth video',                       default=argparse.SUPPRESS)
@@ -126,7 +127,7 @@ def parse_args():
   main.add_argument('--cov_norm',           help='Covariance normalization: 0: off 1: on\n', default=0, type=int)
 
   
-  main.add_argument('--pca_sh_ac',          help='Enable PCA to spherical harmonics AC coefficients',                 default=False, action='store_true')
+  main.add_argument('--trans_sh_ac',        help='Transform SH AC coefficients',   default=None, type=str, choices=['pca'])
   main.add_argument('--pca_var_thr',        help='PCA variance threshold (0.0-1.0, higher retains more components)',  default=0.99,  type=float)
  
 
@@ -178,7 +179,7 @@ if __name__ == '__main__':
 
   if not args.decode_only:
     # Create group of frames object
-    gof_enc = GroupOfFrames( 0, codecs=codecs, src_sh_conversion=ColorStandard.from_string(args.src_sh_conversion), pca_sh_ac=args.pca_sh_ac )
+    gof_enc = GroupOfFrames( 0, codecs=codecs, src_sh_conversion=ColorStandard.from_string(args.src_sh_conversion), trans_sh_ac=args.trans_sh_ac)
     for j in range(21):
       if getattr(args, f'comp_{j}') != []:
         gof_enc.create_video( video_index       = j, 
@@ -217,11 +218,29 @@ if __name__ == '__main__':
     for frame_index in range(args.num_frames):
       # Get point cloud
       pc = pcs.get_pointcloud(frame_index)
+      
+      # Apply Transformation to SH AC coefficients
+      if gof_enc.sh_ac_transform_flag:
+          metadata = pc.trans_sh_ac(args.trans_sh_ac, args.pca_var_thr, 
+                                    gof_enc.sh_ac_transform_dim, 
+                                    gof_enc.sh_ac_mean_flag, 
+                                    gof_enc.sh_ac_std_flag,
+                                    verbose=args.verbose)
+        
+          # Store per-frame transformation metadata
+          gof_enc.save_sh_ac_transform_metadata(metadata)
 
       # Normalize scale and rotation
       if args.cov_norm != 0:
         pc.normalize_scale_rotation(verbose=args.verbose)
-        
+      # add f_rest_* components to args.sort_params
+      if args.sort_with_shac:
+        f_rest_cols = [c for c in pc.df.columns if c.startswith('f_rest_')]
+        n_rest_comp = len(f_rest_cols)
+        for i in range(n_rest_comp):
+          if f'f_rest_{i}' not in args.sort_params:
+            args.sort_params.append(f'f_rest_{i}')  
+      
       sort( pointcloud           = pc,
             rectangular_sorting  = args.rectangular_sorting,     
             sort_params          = args.sort_params,
@@ -237,9 +256,7 @@ if __name__ == '__main__':
             device               = device, 
             verbose              = args.verbose )
 
-      # Apply PCA to SH AC coefficients
-      if gof_enc.sh_pca_flag == 1:
-        pc.pca_sh_ac(args.pca_var_thr, gof_enc.sh_pca_reduced_dims, verbose=args.verbose)
+     
       
       # Src color conversion
       if gof_enc.src_sh_conversion != ColorStandard.NONE:
@@ -248,8 +265,7 @@ if __name__ == '__main__':
       if args.verbose: 
         pc.print("yuv", num = 1)
 
-      # Store per-frame PCA metadata
-      gof_enc.pca_sh_ac(pointcloud=pc)
+      
 
       # Set videos
       gof_enc.set_video(pointcloud=pc, verbose=args.verbose ) 
@@ -376,12 +392,11 @@ if __name__ == '__main__':
     # Get decoded pointcloud
     dec = gof_dec.get_pointcloud( frame_index, args.verbose )
 
-    # Load per-frame PCA metadata for reconstructing SH AC coefficients
-    gof_dec.inv_pca_sh_ac(dec, frame_index, verbose=args.verbose)
-
-    # Inverse PCA to SH AC coefficients
-    if gof_dec.sh_pca_flag:
-      dec.inv_pca_sh_ac(verbose=args.verbose)
+    if gof_dec.sh_ac_transform_flag:
+      # Load per-frame transformation metadata for reconstructing SH AC coefficients
+      metadata = gof_dec.get_sh_ac_transform_metadata(frame_index, verbose=args.verbose)
+      # Inverse transformation to SH AC coefficients
+      dec.inv_trans_sh_ac(metadata, verbose=args.verbose)
 
     # Dec color conversion
     if gof_dec.src_sh_conversion != ColorStandard.NONE:

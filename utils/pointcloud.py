@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import trimesh
 from plyfile import PlyData, PlyElement
-from utils.common import make_path
+from utils.common import make_path, pca_transform, inverse_pca_transform
 from utils.pruning.pruning import calculate_importance_score, prune_by_cdf_threshold
 
 #######################################################################################################
@@ -350,56 +350,63 @@ class Pointcloud:
 
 #######################################################################################################
 
-  def pca_sh_ac(self, var_thr, n_comp, verbose=False):
+  def trans_sh_ac(self, trans_sh_ac, var_thr, n_comp, sh_ac_mean_flag=True, sh_ac_std_flag=True, verbose=False):
     cols = [c for c in self.df.columns if c.startswith('f_rest_')]
-    if not 0 < var_thr <= 1:
-      raise ValueError("Variance threshold must be in (0, 1], got %.2f" % var_thr)
-
+    
     data = self.df[cols].values
-    n_pts, n_orig = data.shape
+    n_pts, sh_ac_dim = data.shape
 
-    mean = np.mean(data, axis=0)
-    std = np.where((s := np.std(data, axis=0)) == 0, 1, s)
-    norm = (data - mean) / std
+    sh_ac_mean = np.mean(data, axis=0) if sh_ac_mean_flag else None
+    sh_ac_std = np.where((s := np.std(data, axis=0)) == 0, 1, s) if sh_ac_std_flag else None
+    
+    if sh_ac_mean is not None:
+      data = data - sh_ac_mean
+    if sh_ac_std is not None:
+      data = data / sh_ac_std
 
-    _, s_vals, Vt = np.linalg.svd(norm, full_matrices=False)
-    cum_var = np.cumsum((s_vals ** 2 / (n_pts - 1)) / np.sum(s_vals ** 2 / (n_pts - 1)))
-
-    n_comp = np.argmax(cum_var >= var_thr) + 1 if n_comp == 0 else min(n_comp, min(n_pts, n_orig))
-    comps = Vt[:n_comp]
-    reduced = norm @ comps.T
-
+    if trans_sh_ac == 'pca':
+      sh_ac_transform_data, sh_ac_transform_basis = pca_transform(data, var_thr=var_thr, n_comp=n_comp, multiple_dim=1)
+    else:
+      raise ValueError(f"[trans_sh_ac] Unknown method: {trans_sh_ac}")
+    
     self.df = self.df.drop(columns=cols)
-    for i in range(n_comp):
-      self.df['f_rest_%d' % i] = reduced[:, i]
+    sh_ac_transform_dim = sh_ac_transform_data.shape[1]
+    for i in range(sh_ac_transform_dim):
+      self.df['f_rest_%d' % i] = sh_ac_transform_data[:, i]
 
     self.ply_columns = [c for c in self.ply_columns if not c.startswith('f_rest_')] + \
-                       ['f_rest_%d' % i for i in range(n_comp)]
+                       ['f_rest_%d' % i for i in range(sh_ac_transform_dim)]
 
-    self.pca_result = {'sh_pca_original_dims': n_orig, 'sh_pca_reduced_dims': n_comp,
-                       'sh_pca_proj_comps': comps.T, 'sh_pca_mean': mean, 'sh_pca_std': std}
+    metadata = {'sh_ac_dim': sh_ac_dim, 
+                'sh_ac_transform_dim': sh_ac_transform_dim,
+                'sh_ac_transform_basis': sh_ac_transform_basis.T, 
+                'sh_ac_mean': sh_ac_mean, 'sh_ac_std': sh_ac_std}
 
     if verbose:
-      print("[PCA SH AC] SH AC coefficients are reduced from %d to %d dims" % (n_orig, n_comp))
-
+      print("[Transform] Using %s to reduce SH AC coefficients from %d to %d dims" % (trans_sh_ac, sh_ac_dim, sh_ac_transform_dim))
+    return metadata
 
   #######################################################################################################
 
-  def inv_pca_sh_ac(self, verbose=False):
-    pca_columns = [col for col in self.df.columns if col.startswith('f_rest_')]
-    pca_metadata = self.pca_result
-    pca_data = self.df[pca_columns].values
+  def inv_trans_sh_ac(self, metadata, verbose=False):
+    transform_cols = [col for col in self.df.columns if col.startswith('f_rest_')]
+    transform_data = self.df[transform_cols].values
 
-    components = pca_metadata['sh_pca_proj_comps']
-    mean = pca_metadata['sh_pca_mean']
-    std = pca_metadata['sh_pca_std']
+    sh_ac_transform_basis = metadata['sh_ac_transform_basis']
+    sh_ac_mean = metadata.get('sh_ac_mean', None)
+    sh_ac_std = metadata.get('sh_ac_std', None)
 
-    n_reduced = pca_data.shape[1]
-    n_orig = components.shape[0]
+    sh_ac_transform_dim = transform_data.shape[1]
+    sh_ac_dim = sh_ac_transform_basis.shape[0]
 
-    reconstructed = (pca_data @ components.T) * std + mean
+    reconstructed = (transform_data @ sh_ac_transform_basis.T)
+    
+    if sh_ac_std is not None:
+      reconstructed = reconstructed * sh_ac_std
+    if sh_ac_mean is not None:
+      reconstructed = reconstructed + sh_ac_mean
 
-    self.df = self.df.drop(columns=pca_columns)
+    self.df = self.df.drop(columns=transform_cols)
     for i in range(reconstructed.shape[1]):
       self.df[f'f_rest_{i}'] = reconstructed[:, i]
 
@@ -407,7 +414,7 @@ class Pointcloud:
     self.ply_columns = non_sh + [f'f_rest_{i}' for i in range(reconstructed.shape[1])]
 
     if verbose:
-      print("[PCA SH AC] SH AC coefficients are reconstructed to %d from %d dims" % (n_reduced, n_orig))
+      print("[Inverse Transform] reconstruct SH AC coefficients to %d from %d dims" % (sh_ac_transform_dim, sh_ac_dim))
 
   #######################################################################################################
 

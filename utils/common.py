@@ -183,6 +183,28 @@ def inverse_log_transform(x):
 
 #######################################################################################################
 
+def pca_transform(data, var_thr, n_comp=0, multiple_dim=1):
+  if not 0 < var_thr <= 1:
+    raise ValueError("Variance threshold must be in (0, 1], got %.2f" % var_thr)
+  n_pts, n_orig = data.shape
+  _, s_vals, Vt = np.linalg.svd(data, full_matrices=False)
+  cum_var = np.cumsum(s_vals ** 2 / np.sum(s_vals ** 2))
+
+  n_comp = np.argmax(cum_var >= var_thr) + 1 if n_comp == 0 else min(n_comp, min(n_pts, n_orig))
+  n_comp = (n_comp + multiple_dim - 1) // multiple_dim * multiple_dim
+  transform_basis = Vt[:n_comp]
+  transform_data = data @ transform_basis.T
+
+  return transform_data, transform_basis
+
+#######################################################################################################
+
+def inverse_pca_transform(transform_data, transform_basis):
+  reconstructed = transform_data @ transform_basis.T
+  return reconstructed
+
+#######################################################################################################
+
 def linear_normalize(values, bitdepth ):
   scale_max = 2 ** bitdepth - 1
   min_val   = values.min()

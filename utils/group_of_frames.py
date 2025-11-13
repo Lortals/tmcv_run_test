@@ -22,7 +22,7 @@ class GroupOfFrames:
 
   #######################################################################################################
 
-  def __init__(self, index=0, codecs=None, src_sh_conversion=ColorStandard.NONE, pca_sh_ac=False): 
+  def __init__(self, index=0, codecs=None, src_sh_conversion=ColorStandard.NONE, trans_sh_ac=None, sh_ac_mean_flag=True, sh_ac_std_flag=True): 
     self.index                 = index
     self.videos                = {}
     self.stat                  = Stat()
@@ -32,10 +32,12 @@ class GroupOfFrames:
     self.block_height          = 0  
     self.src_sh_conversion     = src_sh_conversion
     self.camera_df             = None
-    self.sh_pca_flag           = pca_sh_ac
-    self.sh_pca_original_dims  = 0
-    self.sh_pca_reduced_dims   = 0
-    self.sh_pca_per_frame      = []
+    self.sh_ac_transform_flag  = trans_sh_ac is not None
+    self.sh_ac_mean_flag       = sh_ac_mean_flag
+    self.sh_ac_std_flag        = sh_ac_std_flag
+    self.sh_ac_dim             = 0
+    self.sh_ac_transform_dim   = 0
+    self.sh_ac_transform_per_frame      = []
     
 #######################################################################################################
 
@@ -63,7 +65,7 @@ class GroupOfFrames:
     self.block_height = pointcloud.sidelen_h
     self.camera_df    = pointcloud.camera_df
 
-    if self.sh_pca_flag and len(self.sh_pca_per_frame) == 1:
+    if self.sh_ac_transform_flag and len(self.sh_ac_transform_per_frame) == 1:
       cols = [c for c in pointcloud.df.columns if c.startswith('f_rest_')]
       for vtype, vid in self.videos.items():
         if any(p.startswith('f_rest_') for p in vid.list_params):
@@ -77,22 +79,26 @@ class GroupOfFrames:
 
   #######################################################################################################
 
-  def pca_sh_ac(self, pointcloud):
-    if self.sh_pca_flag is True:
-      pca_result = pointcloud.pca_result
+  def save_sh_ac_transform_metadata(self, metadata):
+    if self.sh_ac_transform_flag is True:
 
-      if self.sh_pca_original_dims == 0 or self.sh_pca_reduced_dims == 0:
-        self.sh_pca_original_dims = pca_result['sh_pca_original_dims']
-        self.sh_pca_reduced_dims = pca_result['sh_pca_reduced_dims']
+      if self.sh_ac_dim == 0 or self.sh_ac_transform_dim == 0:
+        self.sh_ac_dim = metadata['sh_ac_dim']
+        self.sh_ac_transform_dim = metadata['sh_ac_transform_dim']
 
-      self.sh_pca_per_frame.append({k: pca_result[k] for k in ['sh_pca_proj_comps', 'sh_pca_mean', 'sh_pca_std']})
+      # self.sh_ac_transform_per_frame.append({k: metadata[k] for k in ['sh_ac_transform_basis', 'sh_ac_mean', 'sh_ac_std']})
+      sh_ac_transform_per_frame = {'sh_ac_transform_basis': metadata['sh_ac_transform_basis']}
+      if self.sh_ac_mean_flag:
+        sh_ac_transform_per_frame['sh_ac_mean'] = metadata['sh_ac_mean']
+      if self.sh_ac_std_flag:
+        sh_ac_transform_per_frame['sh_ac_std'] = metadata['sh_ac_std']
+      self.sh_ac_transform_per_frame.append(sh_ac_transform_per_frame)
 
   #######################################################################################################
 
-  def inv_pca_sh_ac(self, pointcloud, frame_idx, verbose=False):
-    if self.sh_pca_flag:
-      fm = self.sh_pca_per_frame[frame_idx]
-      pointcloud.pca_result = fm
+  def get_sh_ac_transform_metadata(self, frame_idx, verbose=False):
+    if self.sh_ac_transform_flag:
+      return self.sh_ac_transform_per_frame[frame_idx]
 
   #######################################################################################################
 
@@ -413,7 +419,7 @@ class GroupOfFrames:
     sei.append( Sei.create( SeiPayloadType.VIDEO_TYPE_MAPPING_REGISTERED ) )
     # sei.append( Sei.create( SeiPayloadType.DEQUANTIZATION_MAPPING_REGISTERED ) )
     sei.append( Sei.create( SeiPayloadType.GSC_REGISTERED ) )
-    sei.append( Sei.create( SeiPayloadType.PCA_SH_AC_REGISTERED ) )
+    sei.append( Sei.create( SeiPayloadType.TRANS_SH_AC_REGISTERED ) )
     if add_camera_position_sei and self.camera_df is not None and not self.camera_df.empty:
       sei.append( Sei.create( SeiPayloadType.INPUT_CAMERA_INFORMATION ) )
 

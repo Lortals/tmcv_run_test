@@ -139,7 +139,7 @@ def decode_hm(name, index, output_dir, bitstream, width, height, fps, bits, form
     '--OutputBitDepth=' + str( max( bits, 8 ) )
   ]
   if verbose:
-    print( reformat(' '.join(map(str, cmd))) )
+    print(reformat(' '.join(map(str, cmd))))
 
   with open(log_path, 'w', encoding='utf-8') as logfile:
     result = subprocess.run(cmd, stdout=logfile, stderr=subprocess.STDOUT, text=True, check=True)

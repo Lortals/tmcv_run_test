@@ -98,13 +98,12 @@ if __name__ == '__main__':
   for frame_index in range(gof_dec.num_frames('dec')):
     # Get decoded pointcloud
     dec = gof_dec.get_pointcloud(frame_index, args.verbose)
-
-    # Load PCA metadata and reconstruct SH AC coefficients
-    gof_dec.inv_pca_sh_ac(dec, frame_index, verbose=args.verbose)
     
-    # Inverse PCA to SH AC coefficients
-    if gof_dec.sh_pca_flag:
-      dec.inv_pca_sh_ac(verbose=args.verbose)
+    if gof_dec.sh_ac_transform_flag:
+      # Load transformation metadata and reconstruct SH AC coefficients
+      metadata = gof_dec.get_sh_ac_transform_metadata(frame_index, verbose=args.verbose)
+      # Inverse transformation to SH AC coefficients
+      dec.inv_trans_sh_ac(metadata, verbose=args.verbose)
 
     # Dec color conversion
     if gof_dec.src_sh_conversion != ColorStandard.NONE:
