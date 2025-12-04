@@ -1,0 +1,16 @@
+MPEG 152: version 2.0
+  - m74520:
+    - Chroma down sampling to generate YUV 420: --subsampling_0..31=0|1|2
+    - YUV video chroma conversion: --sh_conversion=601|709|2020
+    - Source ply chroma conversion --src_sh_conversion=601|709|2020
+    - Configurable MSB and LSB position bit depth: --bd_pos=8,8
+    - Supported video codecs: --codec_0..31=hm|hmr|hmd|vtm|vtr
+    - Add HM delta QP by frame --dqp_0..31=cfg/hm/dqp/dQP_m73294_rp1.txt
+    - First scale and rotation normalization: --cov_norm=0|1
+  - m74046: rectangular sorting 
+  - m74048: pruning
+  - m74049: PCA-Based 
+  - m74243 Low-Rank Approximation for Compression of SH AC Coefficients
+
+MPEG 151: version 1.0
+  - First version
