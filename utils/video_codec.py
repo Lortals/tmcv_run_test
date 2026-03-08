@@ -1,8 +1,8 @@
-
 import os
 import subprocess
 import platform
 import json
+import time
 from pathlib import Path
 import shutil
 import ffmpeg
@@ -38,6 +38,7 @@ def get_binary_path(codec, mode ):
 #######################################################################################################
 
 def encode_video( type, name, index, output_dir, video, codec, config, qp, dqp, verbose=False): 
+  start_time = time.time()
   if codec == 'x264' or codec == 'x265':
     bin = encode_ffmpeg(name=name, index=index, output_dir=output_dir, video=video, codec=codec, config=config, qp=qp, verbose=verbose)
   elif codec == 'hm' or codec == 'hmr' or codec == 'hmd':
@@ -46,23 +47,29 @@ def encode_video( type, name, index, output_dir, video, codec, config, qp, dqp, 
     bin = encode_vtm(name=name, index=index, output_dir=output_dir, video=video, codec=codec, config=config, qp=qp, verbose=verbose)
   else:
     raise ValueError(f"encode function not support codec: {codec}")
-  return type, bin
+  end_time = time.time()
+  elapsed = end_time - start_time
+  print(f"[Timer] Encode video {index} ({name}): {elapsed:.4f} seconds")
+  return type, bin, elapsed
 
 #######################################################################################################
 
-def decode_video(name, index, output_dir, bitstream, width, height, fps, bits, format, video, codec, verbose=False):
+def decode_video( name, index, output_dir, bitstream, width, height, fps, bits, format, video, codec, verbose=False): 
+  start_time = time.time()
   if codec == 'x264' or codec == 'x265':
-    decode_ffmpeg(name=name, index=index, output_dir=output_dir, bitstream=bitstream, width=width, height=height, 
-                  fps=fps, bits=bits, format=format, video=video, codec=codec, verbose=verbose)
+    recon = decode_ffmpeg(name=name, index=index, output_dir=output_dir, bitstream=bitstream, width=width, height=height, fps=fps, bits=bits, format=format, video=video, codec=codec, verbose=verbose)
   elif codec == 'hm' or codec == 'hmr' or codec == 'hmd':
-    decode_hm(name=name, index=index, output_dir=output_dir, bitstream=bitstream, width=width, height=height, 
-              fps=fps, bits=bits, format=format, video=video, codec=codec, verbose=verbose)
+    recon = decode_hm(name=name, index=index, output_dir=output_dir, bitstream=bitstream, width=width, height=height, fps=fps, bits=bits, format=format, video=video, codec=codec, verbose=verbose)
   elif codec == 'vtm' or codec == 'vtr':
-    decode_vtm(name=name, index=index, output_dir=output_dir, bitstream=bitstream, width=width, height=height, 
-               fps=fps, bits=bits, format=format, video=video, codec=codec, verbose=verbose)
+    recon = decode_vtm(name=name, index=index, output_dir=output_dir, bitstream=bitstream, width=width, height=height, fps=fps, bits=bits, format=format, video=video, codec=codec, verbose=verbose)
   else:
-    raise ValueError(f"encode function not support codec: {codec}")
-        
+    raise ValueError(f"decode function not support codec: {codec}")
+  end_time = time.time()
+  elapsed = end_time - start_time
+  print(f"[Timer] Decode video {index} ({name}): {elapsed:.4f} seconds")
+  return index, recon, elapsed
+
+
 #######################################################################################################
 ###################################### HM #############################################################
 #######################################################################################################

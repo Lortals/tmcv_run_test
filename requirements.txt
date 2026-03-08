@@ -9,7 +9,7 @@ plyfile==1.1
 ffmpeg-python
 bitarray
 trimesh
-git+https://github.com/fraunhoferhhi/PLAS.git
+# git+https://github.com/fraunhoferhhi/PLAS.git
 torch==2.4.0
 torchvision==0.19 
 pylint==4.0.1

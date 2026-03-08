@@ -1,0 +1,200 @@
+nohup: ignoring input
+Working directory: /home/zhongdalv/mpeg-gsc-tmcv
+=====================================================
+ Total Tasks       : 95 (Sequences x Rate Points)
+ Available GPUs    : 7
+ Max Concurrency   : 28 tasks
+ CPU Threads Avail : 128 (AMD EPYC 7502)
+=====================================================
+[START] Seq: breakfast_semitracked | RP: 3 | Using GPU: 4
+[START] Seq: breakfast_semitracked | RP: 1 | Using GPU: 3
+[START] Seq: breakfast_semitracked | RP: 2 | Using GPU: 3
+[START] Seq: breakfast_semitracked | RP: 4 | Using GPU: 4
+[START] Seq: breakfast_untracked | RP: 1 | Using GPU: 4
+[START] Seq: breakfast_semitracked | RP: 5 | Using GPU: 4
+[START] Seq: breakfast_untracked | RP: 2 | Using GPU: 5
+[START] Seq: breakfast_untracked | RP: 3 | Using GPU: 5
+[START] Seq: breakfast_untracked | RP: 4 | Using GPU: 5
+[START] Seq: breakfast_untracked | RP: 5 | Using GPU: 5
+[START] Seq: breakdance_untracked | RP: 1 | Using GPU: 6
+[START] Seq: breakdance_untracked | RP: 2 | Using GPU: 6
+[START] Seq: breakdance_untracked | RP: 4 | Using GPU: 6
+[START] Seq: breakdance_untracked | RP: 5 | Using GPU: 7
+[START] Seq: breakdance_untracked | RP: 3 | Using GPU: 6
+[START] Seq: bartender_tracked | RP: 2 | Using GPU: 7
+[START] Seq: bartender_tracked | RP: 3 | Using GPU: 7
+[START] Seq: bartender_tracked | RP: 1 | Using GPU: 7
+[START] Seq: bartender_semitracked | RP: 5 | Using GPU: 2
+[START] Seq: bartender_semitracked | RP: 2 | Using GPU: 1
+[START] Seq: bartender_semitracked | RP: 1 | Using GPU: 1
+[START] Seq: bartender_semitracked | RP: 3 | Using GPU: 1
+[START] Seq: bartender_semitracked | RP: 4 | Using GPU: 1
+[START] Seq: cinema_semitracked | RP: 2 | Using GPU: 2
+[START] Seq: cinema_semitracked | RP: 1 | Using GPU: 2
+[START] Seq: cinema_semitracked | RP: 5 | Using GPU: 3
+[START] Seq: cinema_semitracked | RP: 3 | Using GPU: 2
+[START] Seq: cinema_semitracked | RP: 4 | Using GPU: 3
+    [ERROR] Encoding failed: breakfast_semitracked RP3. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/breakfast_semitracked/r3/breakfast_semitracked_r3_enc.log
+[START] Seq: bartender_tracked | RP: 4 | Using GPU: 4
+    [ERROR] Encoding failed: cinema_semitracked RP1. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/cinema_semitracked/r1/cinema_semitracked_r1_enc.log
+[START] Seq: bartender_tracked | RP: 5 | Using GPU: 2
+    [ERROR] Encoding failed: cinema_semitracked RP5. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/cinema_semitracked/r5/cinema_semitracked_r5_enc.log
+    [ERROR] Encoding failed: breakfast_semitracked RP5. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/breakfast_semitracked/r5/breakfast_semitracked_r5_enc.log
+    [ERROR] Encoding failed: bartender_semitracked RP1. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/bartender_semitracked/r1/bartender_semitracked_r1_enc.log
+[START] Seq: cinema_tracked | RP: 2 | Using GPU: 4
+[START] Seq: cinema_tracked | RP: 3 | Using GPU: 1
+    [ERROR] Encoding failed: breakfast_untracked RP3. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/breakfast_untracked/r3/breakfast_untracked_r3_enc.log
+    [ERROR] Encoding failed: bartender_semitracked RP2. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/bartender_semitracked/r2/bartender_semitracked_r2_enc.log
+    [ERROR] Encoding failed: bartender_semitracked RP5. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/bartender_semitracked/r5/bartender_semitracked_r5_enc.log
+    [ERROR] Encoding failed: bartender_tracked RP3. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/bartender_tracked/r3/bartender_tracked_r3_enc.log
+[START] Seq: cinema_tracked | RP: 5 | Using GPU: 1
+    [ERROR] Encoding failed: cinema_semitracked RP4. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/cinema_semitracked/r4/cinema_semitracked_r4_enc.log
+    [ERROR] Encoding failed: breakdance_untracked RP1. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/breakdance_untracked/r1/breakdance_untracked_r1_enc.log
+    [ERROR] Encoding failed: breakfast_semitracked RP2. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/breakfast_semitracked/r2/breakfast_semitracked_r2_enc.log
+[START] Seq: cinema_tracked | RP: 1 | Using GPU: 3
+[START] Seq: breakfast_tracked | RP: 4 | Using GPU: 6
+[START] Seq: breakfast_tracked | RP: 3 | Using GPU: 3
+[START] Seq: breakfast_tracked | RP: 5 | Using GPU: 3
+[START] Seq: breakfast_tracked | RP: 1 | Using GPU: 2
+[START] Seq: cinema_tracked | RP: 4 | Using GPU: 5
+    [ERROR] Encoding failed: breakfast_untracked RP1. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/breakfast_untracked/r1/breakfast_untracked_r1_enc.log
+[START] Seq: breakfast_tracked | RP: 2 | Using GPU: 7
+[START] Seq: manwithfruit_tracked | RP: 1 | Using GPU: 4
+    [ERROR] Encoding failed: bartender_semitracked RP3. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/bartender_semitracked/r3/bartender_semitracked_r3_enc.log
+[START] Seq: manwithfruit_tracked | RP: 2 | Using GPU: 1
+    [ERROR] Encoding failed: breakdance_untracked RP3. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/breakdance_untracked/r3/breakdance_untracked_r3_enc.log
+[START] Seq: manwithfruit_tracked | RP: 3 | Using GPU: 6
+    [ERROR] Encoding failed: breakfast_untracked RP2. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/breakfast_untracked/r2/breakfast_untracked_r2_enc.log
+[START] Seq: manwithfruit_tracked | RP: 4 | Using GPU: 5
+    [ERROR] Encoding failed: breakdance_untracked RP5. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/breakdance_untracked/r5/breakdance_untracked_r5_enc.log
+[START] Seq: manwithfruit_tracked | RP: 5 | Using GPU: 7
+    [ERROR] Encoding failed: breakdance_untracked RP2. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/breakdance_untracked/r2/breakdance_untracked_r2_enc.log
+[START] Seq: lego_ferrari | RP: 1 | Using GPU: 6
+    [ERROR] Encoding failed: bartender_tracked RP2. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/bartender_tracked/r2/bartender_tracked_r2_enc.log
+[START] Seq: lego_ferrari | RP: 2 | Using GPU: 7
+    [ERROR] Encoding failed: breakdance_untracked RP4. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/breakdance_untracked/r4/breakdance_untracked_r4_enc.log
+    [ERROR] Encoding failed: breakfast_untracked RP4. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/breakfast_untracked/r4/breakfast_untracked_r4_enc.log
+[START] Seq: lego_ferrari | RP: 3 | Using GPU: 6
+[START] Seq: lego_ferrari | RP: 4 | Using GPU: 5
+    [ERROR] Encoding failed: breakfast_semitracked RP1. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/breakfast_semitracked/r1/breakfast_semitracked_r1_enc.log
+[START] Seq: lego_ferrari | RP: 5 | Using GPU: 3
+    [ERROR] Encoding failed: cinema_semitracked RP3. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/cinema_semitracked/r3/cinema_semitracked_r3_enc.log
+[START] Seq: lego_bugatti | RP: 1 | Using GPU: 2
+    [ERROR] Encoding failed: cinema_semitracked RP2. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/cinema_semitracked/r2/cinema_semitracked_r2_enc.log
+[START] Seq: lego_bugatti | RP: 2 | Using GPU: 2
+    [ERROR] Encoding failed: breakfast_untracked RP5. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/breakfast_untracked/r5/breakfast_untracked_r5_enc.log
+    [ERROR] Encoding failed: breakfast_semitracked RP4. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/breakfast_semitracked/r4/breakfast_semitracked_r4_enc.log
+[START] Seq: lego_bugatti | RP: 3 | Using GPU: 5
+[START] Seq: lego_bugatti | RP: 4 | Using GPU: 4
+    [ERROR] Encoding failed: bartender_tracked RP1. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/bartender_tracked/r1/bartender_tracked_r1_enc.log
+[START] Seq: lego_bugatti | RP: 5 | Using GPU: 7
+    [ERROR] Encoding failed: bartender_semitracked RP4. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/bartender_semitracked/r4/bartender_semitracked_r4_enc.log
+[START] Seq: cricket_player | RP: 1 | Using GPU: 1
+    [ERROR] Encoding failed: manwithfruit_tracked RP3. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/manwithfruit_tracked/r3/manwithfruit_tracked_r3_enc.log
+[START] Seq: cricket_player | RP: 2 | Using GPU: 6
+    [ERROR] Encoding failed: bartender_tracked RP4. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/bartender_tracked/r4/bartender_tracked_r4_enc.log
+[START] Seq: cricket_player | RP: 3 | Using GPU: 4
+    [ERROR] Encoding failed: manwithfruit_tracked RP1. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/manwithfruit_tracked/r1/manwithfruit_tracked_r1_enc.log
+    [ERROR] Encoding failed: breakfast_tracked RP1. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/breakfast_tracked/r1/breakfast_tracked_r1_enc.log
+[START] Seq: cricket_player | RP: 4 | Using GPU: 4
+[START] Seq: cricket_player | RP: 5 | Using GPU: 2
+    [ERROR] Encoding failed: breakfast_tracked RP4. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/breakfast_tracked/r4/breakfast_tracked_r4_enc.log
+    [ERROR] Encoding failed: cinema_tracked RP4. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/cinema_tracked/r4/cinema_tracked_r4_enc.log
+    [ERROR] Encoding failed: manwithfruit_tracked RP4. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/manwithfruit_tracked/r4/manwithfruit_tracked_r4_enc.log
+    [ERROR] Encoding failed: lego_ferrari RP1. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/lego_ferrari/r1/lego_ferrari_r1_enc.log
+    [ERROR] Encoding failed: breakfast_tracked RP5. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/breakfast_tracked/r5/breakfast_tracked_r5_enc.log
+    [ERROR] Encoding failed: breakfast_tracked RP3. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/breakfast_tracked/r3/breakfast_tracked_r3_enc.log
+    [ERROR] Encoding failed: lego_bugatti RP4. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/lego_bugatti/r4/lego_bugatti_r4_enc.log
+    [ERROR] Encoding failed: lego_ferrari RP5. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/lego_ferrari/r5/lego_ferrari_r5_enc.log
+    [ERROR] Encoding failed: cinema_tracked RP5. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/cinema_tracked/r5/cinema_tracked_r5_enc.log
+    [ERROR] Encoding failed: manwithfruit_tracked RP5. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/manwithfruit_tracked/r5/manwithfruit_tracked_r5_enc.log
+[START] Seq: plant | RP: 1 | Using GPU: 6
+[START] Seq: plant | RP: 2 | Using GPU: 5
+[START] Seq: plant | RP: 4 | Using GPU: 6
+[START] Seq: plant | RP: 3 | Using GPU: 5
+[START] Seq: plant | RP: 5 | Using GPU: 3
+    [ERROR] Encoding failed: manwithfruit_tracked RP2. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/manwithfruit_tracked/r2/manwithfruit_tracked_r2_enc.log
+    [ERROR] Encoding failed: cinema_tracked RP2. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/cinema_tracked/r2/cinema_tracked_r2_enc.log
+    [ERROR] Encoding failed: cinema_tracked RP1. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/cinema_tracked/r1/cinema_tracked_r1_enc.log
+    [ERROR] Encoding failed: breakfast_tracked RP2. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/breakfast_tracked/r2/breakfast_tracked_r2_enc.log
+    [ERROR] Encoding failed: lego_ferrari RP3. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/lego_ferrari/r3/lego_ferrari_r3_enc.log
+    [ERROR] Encoding failed: cinema_tracked RP3. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/cinema_tracked/r3/cinema_tracked_r3_enc.log
+    [ERROR] Encoding failed: cricket_player RP1. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/cricket_player/r1/cricket_player_r1_enc.log
+    [ERROR] Encoding failed: lego_bugatti RP1. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/lego_bugatti/r1/lego_bugatti_r1_enc.log
+    [ERROR] Encoding failed: lego_bugatti RP3. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/lego_bugatti/r3/lego_bugatti_r3_enc.log
+[START] Seq: solo_tango_female | RP: 4 | Using GPU: 1
+[START] Seq: solo_tango_female | RP: 5 | Using GPU: 7
+[START] Seq: solo_tango_female | RP: 2 | Using GPU: 4
+[START] Seq: solo_tango_female | RP: 3 | Using GPU: 3
+[START] Seq: solo_tango_female | RP: 1 | Using GPU: 3
+    [ERROR] Encoding failed: bartender_tracked RP5. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/bartender_tracked/r5/bartender_tracked_r5_enc.log
+[START] Seq: solo_tango_male | RP: 1 | Using GPU: 1
+[START] Seq: solo_tango_male | RP: 5 | Using GPU: 6
+[START] Seq: solo_tango_male | RP: 4 | Using GPU: 7
+[START] Seq: solo_tango_male | RP: 3 | Using GPU: 3
+[START] Seq: solo_tango_male | RP: 2 | Using GPU: 4
+[START] Seq: tango_duo | RP: 1 | Using GPU: 1
+[START] Seq: tango_duo | RP: 4 | Using GPU: 5
+[START] Seq: tango_duo | RP: 5 | Using GPU: 2
+[START] Seq: tango_duo | RP: 3 | Using GPU: 2
+[START] Seq: tango_duo | RP: 2 | Using GPU: 1
+    [ERROR] Encoding failed: lego_ferrari RP2. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/lego_ferrari/r2/lego_ferrari_r2_enc.log
+[START] Seq: tennis_player | RP: 1 | Using GPU: 7
+    [ERROR] Encoding failed: lego_ferrari RP4. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/lego_ferrari/r4/lego_ferrari_r4_enc.log
+[START] Seq: tennis_player | RP: 2 | Using GPU: 5
+    [ERROR] Encoding failed: lego_bugatti RP2. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/lego_bugatti/r2/lego_bugatti_r2_enc.log
+[START] Seq: tennis_player | RP: 3 | Using GPU: 2
+    [ERROR] Encoding failed: lego_bugatti RP5. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/lego_bugatti/r5/lego_bugatti_r5_enc.log
+[START] Seq: tennis_player | RP: 4 | Using GPU: 7
+    [ERROR] Encoding failed: plant RP5. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/plant/r5/plant_r5_enc.log
+[START] Seq: tennis_player | RP: 5 | Using GPU: 3
+    [ERROR] Encoding failed: plant RP2. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/plant/r2/plant_r2_enc.log
+    [ERROR] Encoding failed: cricket_player RP3. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/cricket_player/r3/cricket_player_r3_enc.log
+    [ERROR] Encoding failed: tango_duo RP5. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/tango_duo/r5/tango_duo_r5_enc.log
+    [ERROR] Encoding failed: solo_tango_female RP3. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/solo_tango_female/r3/solo_tango_female_r3_enc.log
+    [ERROR] Encoding failed: solo_tango_male RP5. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/solo_tango_male/r5/solo_tango_male_r5_enc.log
+    [ERROR] Encoding failed: tango_duo RP3. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/tango_duo/r3/tango_duo_r3_enc.log
+    [ERROR] Encoding failed: plant RP4. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/plant/r4/plant_r4_enc.log
+    [ERROR] Encoding failed: cricket_player RP4. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/cricket_player/r4/cricket_player_r4_enc.log
+    [ERROR] Encoding failed: cricket_player RP2. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/cricket_player/r2/cricket_player_r2_enc.log
+[START] Seq: flowerdance | RP: 3 | Using GPU: 2
+[START] Seq: flowerdance | RP: 2 | Using GPU: 4
+[START] Seq: gymnast | RP: 2 | Using GPU: 6
+[START] Seq: flowerdance | RP: 5 | Using GPU: 6
+[START] Seq: flowerdance | RP: 1 | Using GPU: 5
+[START] Seq: gymnast | RP: 3 | Using GPU: 4
+[START] Seq: flowerdance | RP: 4 | Using GPU: 3
+[START] Seq: gymnast | RP: 1 | Using GPU: 2
+[START] Seq: gymnast | RP: 4 | Using GPU: 6
+    [ERROR] Encoding failed: tango_duo RP4. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/tango_duo/r4/tango_duo_r4_enc.log
+[START] Seq: gymnast | RP: 5 | Using GPU: 5
+    [ERROR] Encoding failed: plant RP1. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/plant/r1/plant_r1_enc.log
+    [ERROR] Encoding failed: solo_tango_female RP4. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/solo_tango_female/r4/solo_tango_female_r4_enc.log
+    [ERROR] Encoding failed: plant RP3. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/plant/r3/plant_r3_enc.log
+    [ERROR] Encoding failed: solo_tango_male RP4. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/solo_tango_male/r4/solo_tango_male_r4_enc.log
+    [ERROR] Encoding failed: cricket_player RP5. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/cricket_player/r5/cricket_player_r5_enc.log
+    [ERROR] Encoding failed: solo_tango_male RP1. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/solo_tango_male/r1/solo_tango_male_r1_enc.log
+    [ERROR] Encoding failed: tango_duo RP1. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/tango_duo/r1/tango_duo_r1_enc.log
+    [ERROR] Encoding failed: solo_tango_female RP1. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/solo_tango_female/r1/solo_tango_female_r1_enc.log
+    [ERROR] Encoding failed: tennis_player RP2. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/tennis_player/r2/tennis_player_r2_enc.log
+    [ERROR] Encoding failed: tennis_player RP4. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/tennis_player/r4/tennis_player_r4_enc.log
+    [ERROR] Encoding failed: solo_tango_female RP2. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/solo_tango_female/r2/solo_tango_female_r2_enc.log
+    [ERROR] Encoding failed: solo_tango_male RP3. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/solo_tango_male/r3/solo_tango_male_r3_enc.log
+    [ERROR] Encoding failed: solo_tango_male RP2. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/solo_tango_male/r2/solo_tango_male_r2_enc.log
+    [ERROR] Encoding failed: tennis_player RP3. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/tennis_player/r3/tennis_player_r3_enc.log
+    [ERROR] Encoding failed: solo_tango_female RP5. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/solo_tango_female/r5/solo_tango_female_r5_enc.log
+    [ERROR] Encoding failed: tango_duo RP2. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/tango_duo/r2/tango_duo_r2_enc.log
+    [ERROR] Encoding failed: tennis_player RP1. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/tennis_player/r1/tennis_player_r1_enc.log
+    [ERROR] Encoding failed: flowerdance RP2. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/flowerdance/r2/flowerdance_r2_enc.log
+    [ERROR] Encoding failed: gymnast RP2. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/gymnast/r2/gymnast_r2_enc.log
+    [ERROR] Encoding failed: flowerdance RP4. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/flowerdance/r4/flowerdance_r4_enc.log
+    [ERROR] Encoding failed: tennis_player RP5. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/tennis_player/r5/tennis_player_r5_enc.log
+    [ERROR] Encoding failed: gymnast RP4. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/gymnast/r4/gymnast_r4_enc.log
+    [ERROR] Encoding failed: flowerdance RP1. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/flowerdance/r1/flowerdance_r1_enc.log
+    [ERROR] Encoding failed: flowerdance RP5. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/flowerdance/r5/flowerdance_r5_enc.log
+    [ERROR] Encoding failed: gymnast RP5. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/gymnast/r5/gymnast_r5_enc.log
+    [ERROR] Encoding failed: gymnast RP3. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/gymnast/r3/gymnast_r3_enc.log
+    [ERROR] Encoding failed: flowerdance RP3. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/flowerdance/r3/flowerdance_r3_enc.log
+    [ERROR] Encoding failed: gymnast RP1. Check log: /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/gymnast/r1/gymnast_r1_enc.log
+
+[ALL DONE] Performance metrics saved to /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/ctc_summary.csv

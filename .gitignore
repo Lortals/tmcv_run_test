@@ -15,3 +15,5 @@ __pycache__/
 
 /utils/pruning/build
 /utils/pruning/pruning.egg-info
+/output/
+/output_nf/

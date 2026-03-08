@@ -42,13 +42,13 @@ def parse_args():
     prog=os.path.basename(__file__), formatter_class=argparse.RawTextHelpFormatter )
   main = parser.add_argument_group('Input')    
   main.add_argument('-c', '--config',       help='Path to config file')
-  main.add_argument('-i,', '--input',       help='Input path',                        default='./Bartender',  type=str )
-  main.add_argument('-n','--num_frames',    help='Number of frames',                  default=1,              type=int )
+  main.add_argument('-i', '--input',        help='Input path',                        default='./Bartender',  type=str )
+  main.add_argument('-n', '--num_frames',   help='Number of frames',                  default=1,              type=int )
   main.add_argument('--first_frame',        help='Index of the first frame',          default=0,              type=int )
 
   main = parser.add_argument_group('Output')
-  main.add_argument('-b,', '--bin',         help='Output bin path',                   default='',             type=str )
-  main.add_argument('-r,', '--rec',         help='Output ply path',                   default='',             type=str )
+  main.add_argument('-b', '--bin',          help='Output bin path',                   default='',             type=str )
+  main.add_argument('-r', '--rec',          help='Output ply path',                   default='',             type=str )
   main.add_argument('--ascii',              help='Ascii output format',               default=False,          action='store_true')
 
   main = parser.add_argument_group('Pruning')
@@ -173,11 +173,16 @@ if __name__ == '__main__':
     print("output_dir = %s " % output_dir)
     print("Codecs     = ", codecs)
 
+  t_enc_geo = 0
+  t_enc_attr = 0
+  t_enc_vid = 0
+
   #########################################################################################
   ######################################## Encoder ########################################
   ######################################################################################### 
 
   if not args.decode_only:
+    t0_geo = time.time()
     # Create group of frames object
     gof_enc = GroupOfFrames( 0, codecs=codecs, src_sh_conversion=ColorStandard.from_string(args.src_sh_conversion), trans_sh_ac=args.trans_sh_ac)
     for j in range(21):
@@ -210,6 +215,8 @@ if __name__ == '__main__':
         for frame_index in range(args.num_frames):
           pc, cam = pcs.get_frame(frame_index)
           pc.prune_by_importance(cam, args.cdf_thr, args.verbose)
+    
+    t_enc_geo += time.time() - t0_geo
 
     # Get minimum number of of gaussian in gof 
     min_num_gaussian = pcs.get_min_num_gaussian_in_gof()
@@ -217,10 +224,13 @@ if __name__ == '__main__':
     # Loop over frames for encoding
     for frame_index in range(args.num_frames):
       # Get point cloud
+      t0_geo = time.time()
       pc = pcs.get_pointcloud(frame_index)
+      t_enc_geo += time.time() - t0_geo
       
       # Apply Transformation to SH AC coefficients
       if gof_enc.sh_ac_transform_flag:
+          t0_attr = time.time()
           metadata = pc.trans_sh_ac(args.trans_sh_ac, args.pca_var_thr, 
                                     gof_enc.sh_ac_transform_dim, 
                                     gof_enc.sh_ac_mean_flag, 
@@ -229,8 +239,10 @@ if __name__ == '__main__':
         
           # Store per-frame transformation metadata
           gof_enc.save_sh_ac_transform_metadata(metadata)
+          t_enc_attr += time.time() - t0_attr
 
       # Normalize scale and rotation
+      t0_geo = time.time()
       if args.cov_norm != 0:
         pc.normalize_scale_rotation(verbose=args.verbose)
       # add f_rest_* components to args.sort_params
@@ -255,12 +267,15 @@ if __name__ == '__main__':
             trans_position       = args.trans_position,
             device               = device, 
             verbose              = args.verbose )
+      t_enc_geo += time.time() - t0_geo
 
      
       
       # Src color conversion
       if gof_enc.src_sh_conversion != ColorStandard.NONE:
+        t0_attr = time.time()
         pc.rgb2yuv(gof_enc.src_sh_conversion, verbose=args.verbose)
+        t_enc_attr += time.time() - t0_attr
     
       if args.verbose: 
         pc.print("yuv", num = 1)
@@ -268,7 +283,9 @@ if __name__ == '__main__':
       
 
       # Set videos
+      t0_attr = time.time()
       gof_enc.set_video(pointcloud=pc, verbose=args.verbose ) 
+      t_enc_attr += time.time() - t0_attr
        
       if args.verbose:
         print("Frame %2d: " % (args.first_frame + frame_index))
@@ -282,6 +299,7 @@ if __name__ == '__main__':
         sys.stdout.flush()     
 
     # Quantize videos 
+    t0_attr = time.time()
     gof_enc.quantize(verbose=args.verbose)
 
     # Convert SH
@@ -289,6 +307,7 @@ if __name__ == '__main__':
 
     # Subsample videos
     gof_enc.subsample(verbose=args.verbose)
+    t_enc_attr += time.time() - t0_attr
 
     # Verbose
     if args.verbose:
@@ -305,6 +324,9 @@ if __name__ == '__main__':
     if args.verbose:
       print('Encode videos...')
       sys.stdout.flush()
+    t0_vid = time.time()
+    t_enc_geo_vid = 0
+    t_enc_attr_vid = 0
     with concurrent.futures.ThreadPoolExecutor() as executor:
       futures = [
         executor.submit(encode_video, 
@@ -321,9 +343,20 @@ if __name__ == '__main__':
         for index, (type, video) in enumerate(gof_enc.videos.items())
       ]
       for future in concurrent.futures.as_completed(futures):
-        type, bitstream = future.result() 
+        type, bitstream, time_taken = future.result() 
         gof_enc.videos[type].bitstream = bitstream
-   
+        
+        # Accumulate video encoding time
+        # Check if geometry or attribute video based on parameters
+        params = gof_enc.videos[type].list_params
+        is_geometry = any(p in ['x','y','z','opacity'] or p.startswith('rot') or p.startswith('scale') for p in params)
+        if is_geometry:
+          t_enc_geo_vid += time_taken
+        else:
+          t_enc_attr_vid += time_taken
+
+    t_enc_vid += time.time() - t0_vid
+
     if args.verbose:
       print('All videos encoded.') 
       sys.stdout.flush()
@@ -442,6 +475,13 @@ if __name__ == '__main__':
   end_time = time.time() 
   elapsed = end_time - start_time
   print(f"Time: {elapsed:.4f} secondes")
+  if not args.decode_only:
+    # Add video encoding time to geometry/attribute time
+    t_enc_geo_total = t_enc_geo + t_enc_geo_vid
+    t_enc_attr_total = t_enc_attr + t_enc_attr_vid
+    print(f"EncT Geometry: {t_enc_geo_total:.4f}")
+    print(f"EncT Attributes: {t_enc_attr_total:.4f}")
+    print(f"EncT Video: {t_enc_vid:.4f}")
   sys.stdout.flush()
 
 #######################################################################################################

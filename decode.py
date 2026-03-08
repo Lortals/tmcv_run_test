@@ -18,10 +18,10 @@ def parse_args():
     prog=os.path.basename(__file__),
     formatter_class=argparse.RawTextHelpFormatter)
   main = parser.add_argument_group('Input')    
-  main.add_argument('-b,', '--bin',         help='Input bin path',                    default='enc.v3c',      type=str )
+  main.add_argument('-b', '--bin',          help='Input bin path',                    default='enc.v3c',      type=str )
       
   main = parser.add_argument_group('Output')
-  main.add_argument('-d,', '--dec',         help='Output ply path',                   default='',             type=str )
+  main.add_argument('-d', '--dec',          help='Output ply path',                   default='',             type=str )
   main.add_argument('--ascii',              help='Ascii output format',               default=False,          action='store_true')
   main.add_argument('--first_frame',        help='Index of the first frame',          default=0,              type=int )
   
@@ -45,6 +45,10 @@ if __name__ == '__main__':
   start_time = time.time() 
   handler_ctrl_c()
   args = parse_args()
+  
+  t_dec_geo = 0
+  t_dec_attr = 0
+  t_dec_vid = 0
 
   if not os.path.exists( args.bin ):  
     print("Error: %s not exists " % args.bin )
@@ -60,6 +64,11 @@ if __name__ == '__main__':
 
   # Decode video in parallel
   video_names = {}
+  t0_vid = time.time()
+  t_dec_geo_vid = 0
+  t_dec_attr_vid = 0
+  videos_list = list(gof_dec.videos.values()) # Keep order consistent
+  
   with concurrent.futures.ThreadPoolExecutor() as executor:
     futures = [
       executor.submit(decode_video, 
@@ -72,15 +81,30 @@ if __name__ == '__main__':
                         fps        = gof_dec.fps, 
                         bits       = video.bitdepth, 
                         format     = video.format, 
-                        video      = gof_dec.videos[key].video_uint, 
+                        video      = video.video_uint, 
                         codec      = gof_dec.codecs[video.codec_id],
                         verbose    = args.verbose)
-      for index, (key, video) in enumerate(gof_dec.videos.items())
+      for index, video in enumerate(videos_list)
     ]
     for future in concurrent.futures.as_completed(futures):
-      future.result() 
+      index, recon, elapsed = future.result()
+      video = videos_list[index]
+      
+      # Accumulate video decoding time
+      # Check if geometry or attribute video based on parameters
+      params = getattr(video, 'list_params', [])
+      # If list_params is empty (maybe not populated correctly?), check name/type?
+      # Assuming list_params is populated.
+      is_geometry = any(p in ['x','y','z','opacity'] or p.startswith('rot') or p.startswith('scale') for p in params)
+      if is_geometry:
+        t_dec_geo_vid += elapsed
+      else:
+        t_dec_attr_vid += elapsed
+      
+  t_dec_vid += time.time() - t0_vid
 
   # Upsample videos (when Format is YUV420)
+  t0_attr = time.time()
   gof_dec.upsample(verbose=args.verbose)
 
   # Convert SH
@@ -88,6 +112,7 @@ if __name__ == '__main__':
 
   # Dequantize  
   gof_dec.dequantize(verbose=args.verbose)
+  t_dec_attr += time.time() - t0_attr
   
   # Verbose
   if args.verbose:
@@ -97,8 +122,11 @@ if __name__ == '__main__':
   # Decoder
   for frame_index in range(gof_dec.num_frames('dec')):
     # Get decoded pointcloud
+    t0_geo = time.time()
     dec = gof_dec.get_pointcloud(frame_index, args.verbose)
+    t_dec_geo += time.time() - t0_geo
     
+    t0_attr = time.time()
     if gof_dec.sh_ac_transform_flag:
       # Load transformation metadata and reconstruct SH AC coefficients
       metadata = gof_dec.get_sh_ac_transform_metadata(frame_index, verbose=args.verbose)
@@ -112,6 +140,7 @@ if __name__ == '__main__':
     # Quaternion denormalization
     if not 'rot_0' in [p for v in gof_dec.videos.values() for p in getattr(v, "list_params", None)]:
       dec.reconstruct_quat(verbose=args.verbose)
+    t_dec_attr += time.time() - t0_attr
 
     # Save decoded pointcloud
     if args.verbose:
@@ -125,5 +154,11 @@ if __name__ == '__main__':
   end_time = time.time() 
   elapsed = end_time - start_time
   print(f"Time: {elapsed:.4f} secondes")
+  # Add video decoding time to geometry/attribute time
+  t_dec_geo_total = t_dec_geo + t_dec_geo_vid
+  t_dec_attr_total = t_dec_attr + t_dec_attr_vid
+  print(f"DecT Geometry: {t_dec_geo_total:.4f}")
+  print(f"DecT Attributes: {t_dec_attr_total:.4f}")
+  print(f"DecT Video: {t_dec_vid:.4f}")
 
 #######################################################################################################

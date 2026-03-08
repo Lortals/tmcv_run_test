@@ -1,0 +1,290 @@
+nohup: ignoring input
+Working directory: /home/zhongdalv/mpeg-gsc-tmcv
+=====================================================
+ Total Tasks       : 95 (Sequences x Rate Points)
+ Available GPUs    : 7
+ Max Concurrency   : 28 tasks
+ CPU Threads Avail : 128 (AMD EPYC 7502)
+=====================================================
+[START] Seq: bartender_semitracked | RP: 1 | Using GPU: 1
+[START] Seq: bartender_semitracked | RP: 3 | Using GPU: 1
+[START] Seq: bartender_semitracked | RP: 4 | Using GPU: 1
+[START] Seq: bartender_semitracked | RP: 5 | Using GPU: 2
+[START] Seq: bartender_semitracked | RP: 2 | Using GPU: 1
+[START] Seq: cinema_semitracked | RP: 2 | Using GPU: 2
+[START] Seq: cinema_semitracked | RP: 1 | Using GPU: 2
+[START] Seq: cinema_semitracked | RP: 3 | Using GPU: 2
+[START] Seq: cinema_semitracked | RP: 4 | Using GPU: 3
+[START] Seq: cinema_semitracked | RP: 5 | Using GPU: 3
+[START] Seq: breakfast_semitracked | RP: 1 | Using GPU: 3
+[START] Seq: breakfast_semitracked | RP: 3 | Using GPU: 4
+[START] Seq: breakfast_semitracked | RP: 2 | Using GPU: 3
+[START] Seq: breakfast_semitracked | RP: 4 | Using GPU: 4
+[START] Seq: breakfast_semitracked | RP: 5 | Using GPU: 4
+[START] Seq: breakfast_untracked | RP: 3 | Using GPU: 5
+[START] Seq: breakfast_untracked | RP: 2 | Using GPU: 5
+[START] Seq: breakfast_untracked | RP: 1 | Using GPU: 4
+[START] Seq: breakfast_untracked | RP: 5 | Using GPU: 5
+[START] Seq: breakfast_untracked | RP: 4 | Using GPU: 5
+[START] Seq: breakdance_untracked | RP: 1 | Using GPU: 6
+[START] Seq: breakdance_untracked | RP: 2 | Using GPU: 6
+[START] Seq: breakdance_untracked | RP: 3 | Using GPU: 6
+[START] Seq: breakdance_untracked | RP: 4 | Using GPU: 6
+[START] Seq: breakdance_untracked | RP: 5 | Using GPU: 7
+[START] Seq: bartender_tracked | RP: 1 | Using GPU: 7
+[START] Seq: bartender_tracked | RP: 2 | Using GPU: 7
+[START] Seq: bartender_tracked | RP: 3 | Using GPU: 7
+[INFO] No camera info in breakfast_semitracked, disabling useCameraPosition.
+[INFO] No camera info in breakfast_untracked, disabling useCameraPosition.
+[INFO] No camera info in breakfast_semitracked, disabling useCameraPosition.
+[SUCCESS] Finished: breakfast_untracked | RP: 5
+[START] Seq: bartender_tracked | RP: 4 | Using GPU: 5
+[SUCCESS] Finished: breakfast_semitracked | RP: 5
+[START] Seq: bartender_tracked | RP: 5 | Using GPU: 4
+[SUCCESS] Finished: breakfast_semitracked | RP: 4
+[START] Seq: cinema_tracked | RP: 1 | Using GPU: 4
+[INFO] No camera info in breakfast_untracked, disabling useCameraPosition.
+[SUCCESS] Finished: breakdance_untracked | RP: 5
+[START] Seq: cinema_tracked | RP: 2 | Using GPU: 7
+[SUCCESS] Finished: breakfast_untracked | RP: 4
+[START] Seq: cinema_tracked | RP: 3 | Using GPU: 5
+[INFO] No camera info in cinema_semitracked, disabling useCameraPosition.
+[SUCCESS] Finished: cinema_semitracked | RP: 4
+[START] Seq: cinema_tracked | RP: 4 | Using GPU: 3
+[SUCCESS] Finished: breakdance_untracked | RP: 4
+[START] Seq: cinema_tracked | RP: 5 | Using GPU: 6
+[INFO] No camera info in breakfast_untracked, disabling useCameraPosition.
+[SUCCESS] Finished: breakfast_untracked | RP: 3
+[START] Seq: breakfast_tracked | RP: 1 | Using GPU: 5
+[SUCCESS] Finished: breakdance_untracked | RP: 1
+[START] Seq: breakfast_tracked | RP: 2 | Using GPU: 6
+[INFO] No camera info in breakfast_untracked, disabling useCameraPosition.
+[SUCCESS] Finished: breakfast_untracked | RP: 2
+[START] Seq: breakfast_tracked | RP: 3 | Using GPU: 5
+[SUCCESS] Finished: breakdance_untracked | RP: 3
+[START] Seq: breakfast_tracked | RP: 4 | Using GPU: 6
+[INFO] No camera info in breakfast_semitracked, disabling useCameraPosition.
+[SUCCESS] Finished: breakfast_semitracked | RP: 2
+[START] Seq: breakfast_tracked | RP: 5 | Using GPU: 3
+[SUCCESS] Finished: breakdance_untracked | RP: 2
+[START] Seq: manwithfruit_tracked | RP: 1 | Using GPU: 6
+[INFO] No camera info in cinema_semitracked, disabling useCameraPosition.
+[SUCCESS] Finished: cinema_semitracked | RP: 5
+[START] Seq: manwithfruit_tracked | RP: 2 | Using GPU: 3
+[INFO] No camera info in breakfast_semitracked, disabling useCameraPosition.
+[SUCCESS] Finished: breakfast_semitracked | RP: 3
+[START] Seq: manwithfruit_tracked | RP: 3 | Using GPU: 4
+[INFO] No camera info in cinema_semitracked, disabling useCameraPosition.
+[INFO] No camera info in bartender_semitracked, disabling useCameraPosition.
+[SUCCESS] Finished: cinema_semitracked | RP: 3
+[START] Seq: manwithfruit_tracked | RP: 4 | Using GPU: 2
+[SUCCESS] Finished: bartender_semitracked | RP: 3
+[START] Seq: manwithfruit_tracked | RP: 5 | Using GPU: 1
+[INFO] No camera info in breakfast_untracked, disabling useCameraPosition.
+[SUCCESS] Finished: breakfast_untracked | RP: 1
+[START] Seq: lego_ferrari | RP: 1 | Using GPU: 4
+[INFO] No camera info in bartender_tracked, disabling useCameraPosition.
+[SUCCESS] Finished: bartender_tracked | RP: 2
+[START] Seq: lego_ferrari | RP: 2 | Using GPU: 7
+[INFO] No camera info in breakfast_semitracked, disabling useCameraPosition.
+[SUCCESS] Finished: breakfast_semitracked | RP: 1
+[START] Seq: lego_ferrari | RP: 3 | Using GPU: 3
+[INFO] No camera info in bartender_semitracked, disabling useCameraPosition.
+[INFO] No camera info in bartender_tracked, disabling useCameraPosition.
+[SUCCESS] Finished: bartender_tracked | RP: 5
+[START] Seq: lego_ferrari | RP: 4 | Using GPU: 4
+[INFO] No camera info in bartender_tracked, disabling useCameraPosition.
+[SUCCESS] Finished: bartender_semitracked | RP: 5
+[START] Seq: lego_ferrari | RP: 5 | Using GPU: 2
+[SUCCESS] Finished: bartender_tracked | RP: 4
+[START] Seq: lego_bugatti | RP: 1 | Using GPU: 5
+[INFO] No camera info in bartender_semitracked, disabling useCameraPosition.
+[INFO] No camera info in bartender_semitracked, disabling useCameraPosition.
+[SUCCESS] Finished: bartender_semitracked | RP: 2
+[START] Seq: lego_bugatti | RP: 2 | Using GPU: 1
+[INFO] No camera info in bartender_tracked, disabling useCameraPosition.
+[SUCCESS] Finished: bartender_tracked | RP: 3
+[START] Seq: lego_bugatti | RP: 3 | Using GPU: 7
+[SUCCESS] Finished: bartender_semitracked | RP: 4
+[START] Seq: lego_bugatti | RP: 4 | Using GPU: 1
+[INFO] No camera info in bartender_tracked, disabling useCameraPosition.
+[SUCCESS] Finished: bartender_tracked | RP: 1
+[START] Seq: lego_bugatti | RP: 5 | Using GPU: 7
+[INFO] No camera info in manwithfruit_tracked, disabling useCameraPosition.
+[INFO] No camera info in manwithfruit_tracked, disabling useCameraPosition.
+[INFO] No camera info in manwithfruit_tracked, disabling useCameraPosition.
+[INFO] No camera info in manwithfruit_tracked, disabling useCameraPosition.
+[INFO] No camera info in manwithfruit_tracked, disabling useCameraPosition.
+[SUCCESS] Finished: manwithfruit_tracked | RP: 5
+[START] Seq: cricket_player | RP: 1 | Using GPU: 1
+[INFO] No camera info in cinema_tracked, disabling useCameraPosition.
+[SUCCESS] Finished: manwithfruit_tracked | RP: 4
+[START] Seq: cricket_player | RP: 2 | Using GPU: 2
+[SUCCESS] Finished: cinema_tracked | RP: 5
+[START] Seq: cricket_player | RP: 3 | Using GPU: 6
+[SUCCESS] Finished: manwithfruit_tracked | RP: 1
+[START] Seq: cricket_player | RP: 4 | Using GPU: 6
+[INFO] No camera info in cinema_tracked, disabling useCameraPosition.
+[SUCCESS] Finished: manwithfruit_tracked | RP: 3
+[START] Seq: cricket_player | RP: 5 | Using GPU: 4
+[SUCCESS] Finished: manwithfruit_tracked | RP: 2
+[START] Seq: plant | RP: 1 | Using GPU: 3
+[SUCCESS] Finished: cinema_tracked | RP: 4
+[START] Seq: plant | RP: 2 | Using GPU: 3
+[INFO] No camera info in cinema_semitracked, disabling useCameraPosition.
+[INFO] No camera info in breakfast_tracked, disabling useCameraPosition.
+[SUCCESS] Finished: cinema_semitracked | RP: 2
+[START] Seq: plant | RP: 3 | Using GPU: 2
+[INFO] No camera info in cinema_tracked, disabling useCameraPosition.
+[SUCCESS] Finished: cinema_tracked | RP: 1
+[START] Seq: plant | RP: 4 | Using GPU: 4
+[INFO] No camera info in breakfast_tracked, disabling useCameraPosition.
+[SUCCESS] Finished: breakfast_tracked | RP: 5
+[START] Seq: plant | RP: 5 | Using GPU: 3
+[INFO] No camera info in cinema_tracked, disabling useCameraPosition.
+[SUCCESS] Finished: cinema_tracked | RP: 3
+[START] Seq: solo_tango_female | RP: 1 | Using GPU: 5
+[SUCCESS] Finished: breakfast_tracked | RP: 4
+[START] Seq: solo_tango_female | RP: 2 | Using GPU: 6
+[INFO] No camera info in lego_ferrari, disabling useCameraPosition.
+[INFO] No camera info in breakfast_tracked, disabling useCameraPosition.
+[INFO] No camera info in lego_ferrari, disabling useCameraPosition.
+[INFO] No camera info in bartender_semitracked, disabling useCameraPosition.
+[SUCCESS] Finished: breakfast_tracked | RP: 3
+[START] Seq: solo_tango_female | RP: 3 | Using GPU: 5
+[SUCCESS] Finished: lego_ferrari | RP: 1
+[START] Seq: solo_tango_female | RP: 4 | Using GPU: 4
+[INFO] No camera info in lego_ferrari, disabling useCameraPosition.
+[SUCCESS] Finished: lego_ferrari | RP: 5
+[START] Seq: solo_tango_female | RP: 5 | Using GPU: 2
+[SUCCESS] Finished: bartender_semitracked | RP: 1
+[START] Seq: solo_tango_male | RP: 1 | Using GPU: 1
+[INFO] No camera info in lego_ferrari, disabling useCameraPosition.
+[SUCCESS] Finished: lego_ferrari | RP: 4
+[START] Seq: solo_tango_male | RP: 2 | Using GPU: 4
+[INFO] No camera info in cinema_tracked, disabling useCameraPosition.
+[INFO] No camera info in cinema_semitracked, disabling useCameraPosition.
+[SUCCESS] Finished: cinema_tracked | RP: 2
+[START] Seq: solo_tango_male | RP: 3 | Using GPU: 7
+[INFO] No camera info in lego_ferrari, disabling useCameraPosition.
+[SUCCESS] Finished: lego_ferrari | RP: 3
+[START] Seq: solo_tango_male | RP: 4 | Using GPU: 3
+[INFO] No camera info in lego_bugatti, disabling useCameraPosition.
+[INFO] No camera info in lego_bugatti, disabling useCameraPosition.
+[SUCCESS] Finished: cinema_semitracked | RP: 1
+[START] Seq: solo_tango_male | RP: 5 | Using GPU: 2
+[SUCCESS] Finished: lego_bugatti | RP: 1
+[START] Seq: tango_duo | RP: 1 | Using GPU: 5
+[SUCCESS] Finished: lego_bugatti | RP: 2
+[START] Seq: tango_duo | RP: 2 | Using GPU: 1
+[SUCCESS] Finished: lego_ferrari | RP: 2
+[START] Seq: tango_duo | RP: 3 | Using GPU: 7
+[INFO] No camera info in breakfast_tracked, disabling useCameraPosition.
+[INFO] No camera info in breakfast_tracked, disabling useCameraPosition.
+[SUCCESS] Finished: breakfast_tracked | RP: 2
+[START] Seq: tango_duo | RP: 4 | Using GPU: 6
+[SUCCESS] Finished: breakfast_tracked | RP: 1
+[START] Seq: tango_duo | RP: 5 | Using GPU: 5
+[INFO] No camera info in lego_bugatti, disabling useCameraPosition.
+[SUCCESS] Finished: lego_bugatti | RP: 4
+[START] Seq: tennis_player | RP: 1 | Using GPU: 1
+[INFO] No camera info in lego_bugatti, disabling useCameraPosition.
+[INFO] No camera info in lego_bugatti, disabling useCameraPosition.
+[SUCCESS] Finished: lego_bugatti | RP: 3
+[START] Seq: tennis_player | RP: 2 | Using GPU: 7
+[SUCCESS] Finished: lego_bugatti | RP: 5
+[START] Seq: tennis_player | RP: 3 | Using GPU: 7
+[INFO] No camera info in cricket_player, disabling useCameraPosition.
+[SUCCESS] Finished: cricket_player | RP: 5
+[START] Seq: tennis_player | RP: 4 | Using GPU: 4
+[INFO] No camera info in cricket_player, disabling useCameraPosition.
+[INFO] No camera info in plant, disabling useCameraPosition.
+[SUCCESS] Finished: cricket_player | RP: 4
+[START] Seq: tennis_player | RP: 5 | Using GPU: 6
+[SUCCESS] Finished: plant | RP: 5
+[START] Seq: flowerdance | RP: 1 | Using GPU: 3
+[INFO] No camera info in plant, disabling useCameraPosition.
+[INFO] No camera info in solo_tango_female, disabling useCameraPosition.
+[SUCCESS] Finished: plant | RP: 4
+[START] Seq: flowerdance | RP: 2 | Using GPU: 4
+[INFO] No camera info in cricket_player, disabling useCameraPosition.
+[INFO] No camera info in solo_tango_female, disabling useCameraPosition.
+[SUCCESS] Finished: solo_tango_female | RP: 5
+[START] Seq: flowerdance | RP: 3 | Using GPU: 2
+[INFO] No camera info in plant, disabling useCameraPosition.
+[SUCCESS] Finished: cricket_player | RP: 3
+[START] Seq: flowerdance | RP: 4 | Using GPU: 6
+[SUCCESS] Finished: solo_tango_female | RP: 4
+[START] Seq: flowerdance | RP: 5 | Using GPU: 4
+[SUCCESS] Finished: plant | RP: 3
+[START] Seq: gymnast | RP: 1 | Using GPU: 2
+[INFO] No camera info in cricket_player, disabling useCameraPosition.
+[INFO] No camera info in cricket_player, disabling useCameraPosition.
+[INFO] No camera info in solo_tango_female, disabling useCameraPosition.
+[SUCCESS] Finished: cricket_player | RP: 1
+[START] Seq: gymnast | RP: 2 | Using GPU: 1
+[INFO] No camera info in plant, disabling useCameraPosition.
+[INFO] No camera info in plant, disabling useCameraPosition.
+[SUCCESS] Finished: cricket_player | RP: 2
+[START] Seq: gymnast | RP: 3 | Using GPU: 2
+[SUCCESS] Finished: solo_tango_female | RP: 3
+[START] Seq: gymnast | RP: 4 | Using GPU: 5
+[SUCCESS] Finished: plant | RP: 1
+[START] Seq: gymnast | RP: 5 | Using GPU: 3
+[SUCCESS] Finished: plant | RP: 2
+[INFO] No camera info in solo_tango_male, disabling useCameraPosition.
+[INFO] No camera info in solo_tango_female, disabling useCameraPosition.
+[INFO] No camera info in solo_tango_female, disabling useCameraPosition.
+[SUCCESS] Finished: solo_tango_male | RP: 5
+[SUCCESS] Finished: solo_tango_female | RP: 2
+[SUCCESS] Finished: solo_tango_female | RP: 1
+[INFO] No camera info in solo_tango_male, disabling useCameraPosition.
+[INFO] No camera info in solo_tango_male, disabling useCameraPosition.
+[INFO] No camera info in solo_tango_male, disabling useCameraPosition.
+[SUCCESS] Finished: solo_tango_male | RP: 2
+[SUCCESS] Finished: solo_tango_male | RP: 4
+[SUCCESS] Finished: solo_tango_male | RP: 1
+[INFO] No camera info in solo_tango_male, disabling useCameraPosition.
+[SUCCESS] Finished: solo_tango_male | RP: 3
+[INFO] No camera info in tango_duo, disabling useCameraPosition.
+[INFO] No camera info in tango_duo, disabling useCameraPosition.
+[SUCCESS] Finished: tango_duo | RP: 5
+[INFO] No camera info in tango_duo, disabling useCameraPosition.
+[INFO] No camera info in tango_duo, disabling useCameraPosition.
+[SUCCESS] Finished: tango_duo | RP: 1
+[SUCCESS] Finished: tango_duo | RP: 2
+[SUCCESS] Finished: tango_duo | RP: 4
+[INFO] No camera info in tango_duo, disabling useCameraPosition.
+[SUCCESS] Finished: tango_duo | RP: 3
+[INFO] No camera info in tennis_player, disabling useCameraPosition.
+[INFO] No camera info in tennis_player, disabling useCameraPosition.
+[SUCCESS] Finished: tennis_player | RP: 5
+[INFO] No camera info in tennis_player, disabling useCameraPosition.
+[SUCCESS] Finished: tennis_player | RP: 1
+[SUCCESS] Finished: tennis_player | RP: 4
+[INFO] No camera info in tennis_player, disabling useCameraPosition.
+[INFO] No camera info in tennis_player, disabling useCameraPosition.
+[SUCCESS] Finished: tennis_player | RP: 3
+[SUCCESS] Finished: tennis_player | RP: 2
+[INFO] No camera info in flowerdance, disabling useCameraPosition.
+[SUCCESS] Finished: flowerdance | RP: 5
+[INFO] No camera info in flowerdance, disabling useCameraPosition.
+[SUCCESS] Finished: flowerdance | RP: 4
+[INFO] No camera info in gymnast, disabling useCameraPosition.
+[SUCCESS] Finished: gymnast | RP: 5
+[INFO] No camera info in gymnast, disabling useCameraPosition.
+[SUCCESS] Finished: gymnast | RP: 4
+[INFO] No camera info in flowerdance, disabling useCameraPosition.
+[SUCCESS] Finished: flowerdance | RP: 3
+[INFO] No camera info in gymnast, disabling useCameraPosition.
+[SUCCESS] Finished: gymnast | RP: 3
+[INFO] No camera info in flowerdance, disabling useCameraPosition.
+[SUCCESS] Finished: flowerdance | RP: 1
+[INFO] No camera info in flowerdance, disabling useCameraPosition.
+[SUCCESS] Finished: flowerdance | RP: 2
+[INFO] No camera info in gymnast, disabling useCameraPosition.
+[SUCCESS] Finished: gymnast | RP: 1
+[INFO] No camera info in gymnast, disabling useCameraPosition.
+[SUCCESS] Finished: gymnast | RP: 2
+
+[ALL DONE] Performance metrics saved to /home/zhongdalv/mpeg-gsc-tmcv/output/tmcv_ctc_results/ctc_summary.csv

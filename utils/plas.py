@@ -19,7 +19,8 @@ else:
 
 class FileLock:
   def __init__(self):      
-    self.path = "C:/tmp/gpu_lock.lock" if os.name == "nt" else "/tmp/gpu_lock.lock"
+    gpu_id = os.environ.get("CUDA_VISIBLE_DEVICES", "0").replace(",", "_")
+    self.path = f"C:/tmp/gpu_lock_{gpu_id}.lock" if os.name == "nt" else f"/tmp/gpu_lock_{gpu_id}.lock"
     self.fd = None
 
   def acquire(self, retry_interval=1):
@@ -141,7 +142,13 @@ def prepare_tensor(pointcloud,
       norm_values = linear_normalize( values, bitdepth_sh)
     else:
       raise ValueError(f"Parameter {param} is not recognized or not handled.")
-    tensor_param = torch.from_numpy(norm_values).float().to(device)
+    # Ensure it's a standard numpy array to avoid potential type issues
+    if not isinstance(norm_values, np.ndarray):
+        norm_values = np.array(norm_values)
+    
+    # print(f"DEBUG: type(norm_values)={type(norm_values)}")
+    # Use tolist() to completely bypass numpy version mismatch issues between torch and numpy
+    tensor_param = torch.tensor(norm_values.tolist()).float().to(device)
     tensors.append(tensor_param)
   params_tensor = torch.cat(tensors, dim=1)
   return params_tensor
