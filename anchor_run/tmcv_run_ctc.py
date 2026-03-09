@@ -30,8 +30,11 @@ SEQUENCES = [
 ]
 
 RATE_POINTS = [
-    {"rp": 1, "qp1": -8, "qp2": 0,  "fmt2": "yuv444", "bd0": 10, "bd1": 10},
-    {"rp": 2, "qp1": -4, "qp2": 4,  "fmt2": "yuv444", "bd0": 10, "bd1": 10},
+    # bd0 = MSB bit depth (geometry x,y,z)   bd1 = LSB bit depth (geometry x_add,y_add,z_add)
+    # Passed to encode.py as: --bd_0 bd0 --bd_pos bd0,bd1
+    # Source: m74517 Table 1 (MSB BD / LSB BD columns)
+    {"rp": 1, "qp1": -8, "qp2": 0,  "fmt2": "yuv444", "bd0": 10, "bd1": 9},
+    {"rp": 2, "qp1": -4, "qp2": 4,  "fmt2": "yuv444", "bd0": 10, "bd1": 6},
     {"rp": 3, "qp1": 4,  "qp2": 12, "fmt2": "yuv444", "bd0": 9,  "bd1": 6},
     {"rp": 4, "qp1": 8,  "qp2": 16, "fmt2": "yuv420", "bd0": 9,  "bd1": 6},
     {"rp": 5, "qp1": 16, "qp2": 24, "fmt2": "yuv420", "bd0": 8,  "bd1": 6}
@@ -238,7 +241,7 @@ def process_single_task(seq, rp, results_csv, csv_headers, existing_records):
             enc_cmd = (
                 f"{PYTHON_EXE} encode.py -c {CONFIG_FILE} -i {input_ply} -n {NUM_FRAMES} --first_frame {start_frame} "
                 f"-b {bin_file} -r {rec_file} --qp_1 {rp['qp1']} --qp_2 {rp['qp2']} "
-                f"--format_2 {rp['fmt2']} --bd_0 {rp['bd0']} --bd_1 {rp['bd1']} --bd_2 {rp['bd1']} --verbose"
+                f"--format_2 {rp['fmt2']} --bd_0 {rp['bd0']} --bd_pos {rp['bd0']},{rp['bd1']} --verbose"
             )
             ret_enc, stdout_enc, stderr_enc = run_command(enc_cmd, enc_log, env)
             
