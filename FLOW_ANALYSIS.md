@@ -861,3 +861,164 @@ sort(..., num_points_gof=min_num_gaussian, ...)        # 所有帧都裁剪到�
 **输入相机分辨率、相机数量对 TMCV 编解码时间几乎没有直接影响**（它们只影响 3DGS 训练质量，而 3DGS 训练在 TMCV 流程之外完成）。
 
 因此，**几乎所有 OC 序列的编解码时间小于 FF 序列，是因为 OC 单物体场景的 3DGS 高斯点数量通常显著少于 FF 完整场景——更小的高斯点网格意味着更小的视频帧，从而大幅缩短 HM 编码时间**。
+
+---
+
+## 十二、TMCV 通测（CTC）中哪些可选功能是开启的？
+
+本节以 `anchor_run/tmcv_run_ctc.py` 中实际构造的编码命令行为准，逐一分析 m74520、m74046、m74048、m74049、m74243 五个功能在 CTC 通测中的开启状态。
+
+### 12.1 CTC 实际编码命令
+
+`anchor_run/tmcv_run_ctc.py` 第 251–254 行构造的 `enc_cmd` 为：
+
+```bash
+{PYTHON_EXE} encode.py \
+  -c cfg/hm/ctc/cfg_3_videos.cfg \
+  -i {input_ply} \
+  -n 32 \
+  --first_frame {start_frame} \
+  -b {bin_file} \
+  -r {rec_file} \
+  --qp_1 {qp1} \          # RP 相关：-8 / -4 / 4 / 8 / 16
+  --qp_2 {qp2} \          # RP 相关：0 / 4 / 12 / 16 / 24
+  --format_2 {fmt2} \     # RP 相关：yuv444（RP1-3）/ yuv420（RP4-5）
+  --bd_0 {bd0} \          # RP 相关：10 / 10 / 9 / 9 / 8
+  --bd_pos {bd0},{bd1} \  # RP 相关：10,9 / 10,6 / 9,6 / 9,6 / 8,6
+  --verbose
+```
+
+**完整未显式传入的参数均取 `encode.py` / `cfg_3_videos.cfg` 的默认值。**
+
+---
+
+### 12.2 五个功能的开启状态总览
+
+| 功能 | 提案 | 是否开启 | 开启依据 |
+|------|------|---------|---------|
+| 色度下采样（yuv420） | m74520 | **⚠️ 部分开启** | `--format_2 yuv420` 仅在 RP4、RP5 传入 |
+| YUV 颜色转换（BT.601） | m74520 | **✅ 始终开启** | `--sh_conversion` 默认值为 `'601'`（BT.601） |
+| 可配置 MSB/LSB 位深 | m74520 | **✅ 始终开启** | `--bd_pos {bd0},{bd1}` 在每个 RP 均显式传入 |
+| 矩形排序 | m74046 | **❌ 未开启** | 命令行和 cfg 均无 `--rectangular_sorting`，默认 `False` |
+| 重要度高斯剪枝 | m74048 | **❌ 未开启** | 命令行和 cfg 均无 `--gaussian_pruning`，默认 `False` |
+| PCA 降维（基础） | m74049 | **❌ 未开启** | 需 `--trans_sh_ac pca`，未传入，默认 `None` |
+| SH AC 低秩近似（PCA） | m74243 | **❌ 未开启** | 需 `--trans_sh_ac pca`，未传入，默认 `None` |
+
+---
+
+### 12.3 m74520：色度下采样、YUV 颜色转换、可配置 MSB/LSB 位深
+
+m74520 包含三个子功能，在 CTC 中的状态分别如下：
+
+#### 12.3.1 色度下采样（yuv420 / yuv444）
+
+由 `--format_2 {fmt2}` 控制，即 Video 2（SH 颜色视频）的 YUV 格式：
+
+| RP | format_2 | 色度下采样 |
+|----|----------|-----------|
+| 1 | `yuv444` | 无下采样（4:4:4） |
+| 2 | `yuv444` | 无下采样（4:4:4） |
+| 3 | `yuv444` | 无下采样（4:4:4） |
+| 4 | `yuv420` | **2×2 下采样（4:2:0）** |
+| 5 | `yuv420` | **2×2 下采样（4:2:0）** |
+
+> 注意：Video 0（几何）和 Video 1（属性）的 format 在 `cfg_3_videos.cfg` 中固定为 `yuv400`（灰度），不涉及色度。
+
+色度下采样在 `GroupOfFrames.subsample()` 中实现（`group_of_frames.py`：第 284 行），仅对 `format == yuv420` 的视频执行。
+
+#### 12.3.2 YUV 颜色转换（BT.601）
+
+`encode.py` 的 `--sh_conversion` 参数控制 Video 2 中 f_dc / f_rest SH 系数从 RGB 空间到 YUV 空间的转换方式（第 115–119 行）。
+
+**默认值为 `'601'`（BT.601），CTC 命令行未覆盖，因此始终使用 BT.601 YUV 转换。**
+
+转换流程（`encode.py` 第 306 行）：
+```python
+gof_enc.rgb2yuv(verbose=args.verbose)  # 量化后，编码前
+```
+
+`GroupOfFrames.rgb2yuv()` 仅对 `sh_conversion != ColorStandard.NONE` 的视频执行（`group_of_frames.py` 第 218 行）。BT.601 时必然执行，将 Video 2 的各 SH 分量从 (R, G, B) 映射为 (Y, Cb, Cr)，解码时再做逆转换。
+
+> 注意：`--src_sh_conversion` 参数（对**源点云** f_dc 做 RGB→YUV 预处理）默认为 `'0'`（NONE），在 CTC 中**不执行**。只有对编码视频像素层的 YUV 转换是默认开启的。
+
+#### 12.3.3 可配置 MSB/LSB 位深（`--bd_pos`）
+
+`--bd_pos {bd0},{bd1}` 在每个 RP 中均显式传入，定义了 Video 0 中几何坐标的高位（MSB）和低位（LSB）精度：
+
+| RP | bd0（MSB） | bd1（LSB） | 几何总精度 |
+|----|-----------|-----------|----------|
+| 1 | 10 | 9 | 19 位 |
+| 2 | 10 | 6 | 16 位 |
+| 3 | 9  | 6 | 15 位 |
+| 4 | 9  | 6 | 15 位 |
+| 5 | 8  | 6 | 14 位 |
+
+此功能**在所有 RP 中均开启**。MSB 部分（x, y, z）由 Video 0 以 `bd0` 位深编码；LSB 部分（x_add, y_add, z_add）同样在 Video 0 中以 `bd1` 位深编码，整体打包为 `comp_0: x,y,z,x_add,y_add,z_add`（见 `cfg_3_videos.cfg`）。
+
+---
+
+### 12.4 m74046：矩形排序（`--rectangular_sorting`）
+
+**CTC 通测中未开启。**
+
+- `tmcv_run_ctc.py` 的 `enc_cmd` 未包含 `--rectangular_sorting`
+- `cfg/hm/ctc/cfg_3_videos.cfg` 中无该参数
+- `encode.py` 第 63 行默认值为 `False`
+
+PLAS 排序使用的是**正方形网格**（`sidelen_w == sidelen_h`），即 `utils/plas.py` 中 `resize()` 的 `rectangular_sort=False` 分支：
+
+```python
+sidelen_w = n // min_block_size * min_block_size
+sidelen_h = sidelen_w   # 正方形
+```
+
+矩形排序（`rectangular_sort=True`）会让 `sidelen_h = num_points_gof // sidelen_w`，可以更充分地利用 GoF 中所有高斯点（减少因取整丢弃的点数），但 CTC 未启用。
+
+---
+
+### 12.5 m74048：基于重要度的高斯剪枝（`--gaussian_pruning`）
+
+**CTC 通测中未开启。**
+
+- `tmcv_run_ctc.py` 的 `enc_cmd` 未包含 `--gaussian_pruning`
+- `cfg/hm/ctc/cfg_3_videos.cfg` 中无该参数
+- `encode.py` 第 52 行默认值为 `False`
+
+正常编码流程中，高斯点的裁剪（pruning）仅发生在 PLAS 排序前的 `resize()` 阶段，裁剪目标是使总点数适配正方形 `sidelen²` 网格（按 DataFrame 原有顺序 `head(N)` 截断，不考虑重要度）。
+
+重要度剪枝（`utils/pruning/pruning.py`）会先用 CDF 阈值（`--cdf_thr 0.99`）按视觉重要度排序，只保留最重要的高斯点；CTC 中此步骤被跳过。
+
+---
+
+### 12.6 m74049 / m74243：PCA 降维与 SH AC 低秩近似（`--trans_sh_ac pca`）
+
+**两者均未开启。**
+
+m74049 提供 PCA 降维基础实现，m74243 将其应用于 SH AC（球谐函数 AC）系数以实现低秩近似。两者均依赖 `--trans_sh_ac pca` 参数：
+
+- `tmcv_run_ctc.py` 的 `enc_cmd` 未包含 `--trans_sh_ac`
+- `cfg/hm/ctc/cfg_3_videos.cfg` 中无该参数
+- `encode.py` 第 130 行默认值为 `None`
+
+当 `trans_sh_ac=None` 时，`GroupOfFrames` 的 `sh_ac_transform_flag` 为 `False`（`group_of_frames.py` 第 25–35 行），`encode.py` 中对应的 `if gof_enc.sh_ac_transform_flag:` 块（第 232–241 行）被完全跳过，即不进行 SH AC 系数的 PCA 变换。
+
+Video 2 中的 f_rest_* SH AC 系数直接以**原始量化值**存入视频帧。
+
+---
+
+### 12.7 总结
+
+```
+CTC 通测实际开启的 m74xxx 功能：
+
+✅ m74520 子功能①  色度下采样 (yuv420)     ← 仅 RP4、RP5 开启
+✅ m74520 子功能②  YUV 颜色转换 (BT.601)   ← 所有 RP 默认开启
+✅ m74520 子功能③  MSB/LSB 可配置位深       ← 所有 RP 显式开启
+
+❌ m74046           矩形排序                ← 未开启（正方形网格）
+❌ m74048           重要度高斯剪枝          ← 未开启（按顺序截断）
+❌ m74049           PCA 降维（基础实现）    ← 未开启
+❌ m74243           SH AC 低秩近似（PCA）   ← 未开启
+```
+
+m74046 / m74048 / m74049 / m74243 均属于**可选优化功能**，需在命令行或 cfg 中显式启用。CTC 通测采用的是**最基础的编码配置**，以确保基准（anchor）的可比性和可重现性。
