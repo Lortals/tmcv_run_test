@@ -196,10 +196,10 @@ enc_metrics = parse_time_memory(stdout_enc, stderr_enc)
 encode.py
   → preprocess_args_with_config()   # 合并 cfg 文件与命令行参数
   → GroupOfPointclouds.load()       # 读入 32 帧 PLY
-  → GroupOfFrames.encode()          # 分三路视频编码
-      ├─ Video 0: HM-RExt, qp=0, bd_0=bd0, 几何坐标 MSB
-      ├─ Video 1: HM-RExt, qp=qp1, bd=10, 几何属性
-      └─ Video 2: HM-RExt, qp=qp2, bd=10, 颜色+SH
+  → GroupOfFrames.encode()          # 分三路视频编码（详见 §十）
+      ├─ Video 0: HM-RExt, qp=0 + lossless.cfg, bd_0=bd0, 几何坐标（x/y/z MSB+LSB），近无损
+      ├─ Video 1: HM-RExt, qp=qp1, bd=10（固定），几何属性（opacity/scale/rotation），有损帧内
+      └─ Video 2: HM-RExt, qp=qp2, bd=10（固定），颜色+SH（f_dc+f_rest），有损帧间
   → 打包为 .bin 码流
   → 打印 "Time: x.xxxx secondes"
 ```
@@ -523,3 +523,194 @@ python anchor_run/tmcv_run_ctc.py
 | `/usr/bin/time -v` 包装 | 获取真实系统级时间和内存，比 Python 内部计时更准确 |
 | `CUDA_VISIBLE_DEVICES` per-task | 隔离 GPU 使用，防止不同任务的 PyTorch/CUDA 操作互相干扰 |
 | `os.replace(temp, current)` | 原子性文件替换，防止相机注入中途崩溃导致原始文件损坏 |
+
+---
+
+## 十、`encode.py` 三路视频的 `qp` 与 `bd` 参数详解
+
+### 10.1 参数来源
+
+`tmcv_run_ctc.py` 调用 `encode.py` 时传入的关键参数为：
+
+```bash
+encode.py
+  --bd_0   {bd0}          # Video 0 的 bit depth（随码率点变化）
+  --bd_pos {bd0},{bd1}    # 几何坐标 MSB,LSB 精度（bd_pos[0]=bd0, bd_pos[1]=bd1）
+  --qp_1   {qp1}          # Video 1 的量化参数（随码率点变化）
+  --qp_2   {qp2}          # Video 2 的量化参数（随码率点变化）
+  # Video 0 的 qp 由 cfg_3_videos.cfg 指定为 0（配合 lossless.cfg）
+  # Video 1/2 的 bd 由 cfg_3_videos.cfg 固定为 10
+```
+
+`cfg/hm/ctc/cfg_3_videos.cfg` 定义了三路视频各自的**组件分配、编码器类型、格式、打包方式**，而 `tmcv_run_ctc.py` 只覆盖 `qp_1`、`qp_2`、`bd_0`、`bd_pos`。
+
+---
+
+### 10.2 `bd`（位深，Bit Depth）的双重角色
+
+`bd` 在 TMCV 管线中同时扮演**两个不同但相关**的角色：
+
+#### 角色 1：TMCV 应用层量化精度（`VideoData._quantize_linear`）
+
+每个高斯点的浮点属性（如 opacity、scale、f_dc_0 等）在打包进视频前，需先经过**线性量化**映射到整数：
+
+```
+normed    = (value - min_val) / (max_val - min_val)   # 归一化到 [0,1]
+quantized = round(normed × 2^bd)                       # 映射到 [0, 2^bd - 1] 整数
+```
+
+`bd` 越大 → 量化区间越细 → **TMCV 应用层引入的量化误差越小**。
+
+| Video | 包含的属性 | `bd` 控制的量化精度 |
+|-------|-----------|-------------------|
+| Video 0 | x, y, z 几何坐标 | 由 `--bd_pos bd0,bd1` 控制（MSB 用 `bd0` 位，LSB 用 `bd1` 位，合计 `bd0+bd1` 位精度） |
+| Video 1 | opacity, scale(×3), rotation(×4) | `bd=10`（固定，10 位精度） |
+| Video 2 | f_dc(×3), f_rest(×45) 颜色/SH | `bd=10`（固定，10 位精度） |
+
+#### 角色 2：HM-RExt 编码器的输入/内部位深（`encode_hm` → `--InputBitDepth`）
+
+量化后的整数数据以 `bd` 位的 YUV 视频帧写入磁盘，再送给 HM-RExt 编码：
+
+```python
+# video_codec.py encode_hm()
+cmd += [
+    '--InputBitDepth='    + str(max(video.bits, 8)),   # video.bits == bd
+    '--InternalBitDepth=' + str(max(video.bits, 8)),
+    '--OutputBitDepth='   + str(max(video.bits, 8)),
+]
+```
+
+**`bd` 决定了 HM-RExt 处理的样本范围上限**：`bd=10` 时样本值域为 `[0, 1023]`，`bd=8` 时为 `[0, 255]`。这同时影响了 HM-RExt 内部的 `QpBdOffset`（见 §10.4）。
+
+---
+
+### 10.3 各码率点的 `bd` 取值设计
+
+| RP | bd0 (Video 0 MSB) | bd1 (Video 0 LSB) | Video 1 bd | Video 2 bd | 几何总精度 |
+|----|-------------------|-------------------|------------|------------|-----------|
+| 1  | 10                | 9                 | 10（固定）  | 10（固定）  | 19 位     |
+| 2  | 10                | 6                 | 10（固定）  | 10（固定）  | 16 位     |
+| 3  | 9                 | 6                 | 10（固定）  | 10（固定）  | 15 位     |
+| 4  | 9                 | 6                 | 10（固定）  | 10（固定）  | 15 位     |
+| 5  | 8                 | 6                 | 10（固定）  | 10（固定）  | 14 位     |
+
+**设计逻辑**：
+- **RP1（最高码率）**：`bd0=10, bd1=9` → 几何坐标总精度 19 位，几乎接近浮点精度。
+- **RP5（最低码率）**：`bd0=8, bd1=6` → 几何坐标总精度 14 位，量化更粗，码率更低。
+- **Video 1/2 的 bd 恒为 10**：属性和颜色精度不跟码率点走，仅由视频 QP（qp1/qp2）控制质量。
+
+---
+
+### 10.4 `qp`（量化参数，Quantization Parameter）的含义
+
+`qp` 是传给 HM-RExt (`--QP=`) 的**视频编码量化参数**，直接控制视频帧的有损压缩程度：
+
+```
+QP 越大  →  量化步长越大  →  压缩损失越大  →  码率越低、质量越差
+QP 越小  →  量化步长越小  →  压缩损失越小  →  码率越高、质量越好
+```
+
+#### HM-RExt 的 QpBdOffset 机制（负 QP 的由来）
+
+H.265/HEVC 规范定义：
+
+```
+QpBdOffset = 6 × (bitDepth − 8)
+```
+
+对于 `bd=10`（Video 1/2 的固定位深）：
+
+```
+QpBdOffset = 6 × (10 − 8) = 12
+```
+
+HM-RExt 实际量化使用的是**内部有效 QP**：
+
+```
+QP_effective = QP_external + QpBdOffset
+```
+
+因此，当 `QP_external = -8` 时：`QP_effective = -8 + 12 = 4`（接近无损）。
+
+这就是为什么 RP1/RP2 的 `qp1` 为**负数**：它是为了在 10 位编码下获得比 `QP_external=0`（有效 QP=12）更精细的量化质量。HM-RExt 对 10 位输入允许 `QP_external ∈ [-12, 51]`，负值完全合法。
+
+---
+
+### 10.5 三路视频的 `qp` 设计决策
+
+#### Video 0：几何坐标（x, y, z, x_add, y_add, z_add）
+
+```
+qp_0  = 0（来自 cfg_3_videos.cfg）
+config = encoder_intra_main_rext.cfg + lossless/lossless.cfg
+bd_0  = bd0（随码率点变化：10/10/9/9/8）
+```
+
+| 参数 | 值 | 原因 |
+|------|-----|------|
+| `qp=0` | 固定 | `lossless.cfg` 将 HM 切换到**无损模式**，QP 值在无损模式下不生效，本质上 qp=0 仅作占位 |
+| `lossless.cfg` | 强制启用 | 几何坐标（x/y/z）是高斯点位置的精确描述，任何有损压缩都会导致点云几何失真，进而严重影响 3DGS 渲染质量 |
+| `bd_0` 随码率变化 | 10→8 | 通过减少量化位数来降低几何精度和码率，是 RP1→RP5 码率控制的主要手段之一 |
+| `format=yuv400` | 仅亮度 | 几何坐标是标量，无需色度通道；单通道节省 2/3 空间 |
+| `packing=planar` | 平面打包 | x/y/z/x_add/y_add/z_add 共 6 个分量各自独占一个通道平面，帧间无时序依赖 |
+| `config=intra_main_rext` | 帧内编码 | 几何分量帧间相关性弱（不同帧高斯点数量和排列不同），帧内编码更稳定 |
+
+#### Video 1：几何属性（opacity, scale×3, rotation×4）
+
+```
+qp_1  = qp1（来自 RATE_POINTS，随码率点变化）
+bd_1  = 10（固定，来自 cfg_3_videos.cfg）
+config = encoder_intra_main_rext.cfg（帧内，无 lossless）
+format = yuv400，packing = planar
+```
+
+| RP | qp1 | QP_effective（10-bit） | 质量倾向 |
+|----|-----|-----------------------|---------|
+| 1  | -8  | 4                     | 近无损   |
+| 2  | -4  | 8                     | 高质量   |
+| 3  | 4   | 16                    | 中等     |
+| 4  | 8   | 20                    | 中低     |
+| 5  | 16  | 28                    | 低质量   |
+
+**为什么不使用无损模式**：属性参数（opacity、scale、rotation）对渲染有影响但容错性高于几何坐标；有损压缩可以大幅降低码率，且视觉质量下降可控。
+
+**为什么 bd 固定为 10**：属性量化精度独立于码率点；用 QP 调控属性质量比用 bd 更灵活（QP 可以连续调节）。
+
+#### Video 2：颜色 + 球谐系数（f_dc×3, f_rest×45）
+
+```
+qp_2  = qp2（来自 RATE_POINTS，随码率点变化）
+bd_2  = 10（固定，来自 cfg_3_videos.cfg）
+config = encoder_lowdelay_main_rext.cfg（低延迟帧间编码）
+format = yuv444（RP1/2/3）或 yuv420（RP4/5）
+packing = temporal（时序打包）
+```
+
+| RP | qp2 | fmt2   | 颜色/SH 质量 |
+|----|-----|--------|------------|
+| 1  | 0   | yuv444 | 最高（有效 QP=12） |
+| 2  | 4   | yuv444 | 较高（有效 QP=16） |
+| 3  | 12  | yuv444 | 中等（有效 QP=24） |
+| 4  | 16  | yuv420 | 中低（+色度降采样） |
+| 5  | 24  | yuv420 | 低（有效 QP=36）   |
+
+**为什么使用 `encoder_lowdelay`（帧间低延迟模式）**：颜色和球谐系数在相邻帧之间往往高度相关（3DGS 场景动态变化小），帧间预测可以显著降低码率。与 Video 0/1 使用帧内模式不同。
+
+**为什么 `temporal` 打包**：48 个颜色/SH 分量（f_dc×3 + f_rest×45）被时序打包到一个视频流中（在时间轴上堆叠），充分利用帧间预测；而 planar 打包会为每个分量单独创建一帧，帧间相关性更弱。
+
+**为什么 `yuv444` vs `yuv420`**：SH 系数通过 BT.601 RGB→YUV 转换处理（`sh_conversion=601`），yuv444 保留了全分辨率色度，质量更高但码率也更高；低码率点切换 yuv420 以牺牲色度精度换取码率节省。
+
+---
+
+### 10.6 三路视频参数汇总对比
+
+| 属性 | Video 0（几何坐标） | Video 1（几何属性） | Video 2（颜色/SH） |
+|------|-------------------|-------------------|------------------|
+| `comp` | x,y,z,x_add,y_add,z_add | opacity,rot_3,zero,scale_0~2,rot_0~2 | f_dc_0~2, f_rest_0~44 |
+| `bd` | bd0（8/9/10，随 RP 变化） | **10（固定）** | **10（固定）** |
+| `qp` | **0（固定）** | qp1（-8/-4/4/8/16，随 RP 变化） | qp2（0/4/12/16/24，随 RP 变化） |
+| `format` | yuv400 | yuv400 | yuv444（RP1-3）/ yuv420（RP4-5） |
+| `packing` | planar | planar | temporal |
+| `codec_config` | intra + lossless | intra（有损） | lowdelay（帧间） |
+| **码率控制手段** | **bd 精度** | **QP 量化** | **QP + 格式降采样** |
+| **设计原因** | 几何必须近无损 | 属性容忍适度有损 | 颜色/SH 利用帧间相关性 |
