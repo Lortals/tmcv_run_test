@@ -23,10 +23,16 @@ NUM_FRAMES = 32
 # 2. 测试序列与码率点配置
 # ==========================================
 SEQUENCES = [
+    # Forward Facing
     "bartender_semitracked", "cinema_semitracked", "breakfast_semitracked",
     "breakfast_untracked", "breakdance_untracked",
     "bartender_tracked", "cinema_tracked", "breakfast_tracked",
-    "manwithfruit_tracked"
+    "trio", "makeup", "musical",
+    # Object Centric
+    "manwithfruit_tracked",
+    "lego_ferrari", "lego_bugatti", "cricket_player", "plant",
+    "solo_tango_female", "solo_tango_male", "tango_duo", "tennis_player",
+    "library", "flowerdance", "gymnast",
 ]
 
 RATE_POINTS = [
@@ -55,28 +61,32 @@ PYTHON_EXE = "/home/zhongdalv/anaconda3/envs/v3c_gsc_cloned/bin/python"
 
 # Format: (width, height, start_frame)
 SEQ_RES = {
-    # Forward Facing
+    # Forward Facing (1920×1080)
     "bartender_semitracked": (1920, 1080, 0),
-    "cinema_semitracked": (1920, 1080, 0),
+    "cinema_semitracked":    (1920, 1080, 0),
     "breakfast_semitracked": (1920, 1080, 0),
-    "breakfast_untracked": (1920, 1080, 0),
-    "breakdance_untracked": (1920, 1080, 0),
-    "bartender_tracked": (1920, 1080, 0),
-    "cinema_tracked": (1920, 1080, 0),
-    "breakfast_tracked": (1920, 1080, 0),
+    "breakfast_untracked":   (1920, 1080, 0),
+    "breakdance_untracked":  (1920, 1080, 0),
+    "bartender_tracked":     (1920, 1080, 0),
+    "cinema_tracked":        (1920, 1080, 0),
+    "breakfast_tracked":     (1920, 1080, 0),
+    "trio":                  (1920, 1080, 0),
+    "makeup":                (1920, 1080, 0),
+    "musical":               (1920, 1080, 0),
 
     # Object Centric
-    "manwithfruit_tracked": (3840, 2160, 81),
-    "lego_ferrari": (4594, 5514, 0),
-    "lego_bugatti": (3852, 2868, 0),
-    "cricket_player": (4520, 2540, 0),
-    "plant": (2954, 3968, 0),
-    "solo_tango_female": (4534, 2542, 0),
-    "solo_tango_male": (4528, 2544, 0),
-    "tango_duo": (4522, 2538, 0),
-    "tennis_player": (4518, 2540, 0),
-    "flowerdance": (2456, 2054, 0),
-    "gymnast": (2456, 2054, 200)
+    "manwithfruit_tracked":  (3840, 2160, 81),
+    "lego_ferrari":          (4594, 5514, 0),
+    "lego_bugatti":          (3852, 2868, 0),
+    "cricket_player":        (4520, 2540, 0),
+    "plant":                 (2954, 3968, 0),
+    "solo_tango_female":     (4534, 2542, 0),
+    "solo_tango_male":       (4528, 2544, 0),
+    "tango_duo":             (4522, 2538, 0),
+    "tennis_player":         (4518, 2540, 0),
+    "library":               (3780, 2131, 0),
+    "flowerdance":           (2456, 2054, 0),
+    "gymnast":               (2456, 2054, 200),
 }
 
 # 初始化 GPU 动态调度队列
