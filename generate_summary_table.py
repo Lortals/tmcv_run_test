@@ -84,6 +84,7 @@ def main():
     
     # Add sequences that are not in tmcv results as placeholders
     expected_seqs = [
+        # Forward Facing
         'bartender_semitracked',
         'cinema_semitracked',
         'breakfast_semitracked',
@@ -94,7 +95,20 @@ def main():
         'breakfast_tracked',
         'trio',
         'makeup',
-        'musical'
+        'musical',
+        # Object Centric
+        'manwithfruit_tracked',
+        'lego_ferrari',
+        'lego_bugatti',
+        'cricket_player',
+        'plant',
+        'solo_tango_female',
+        'solo_tango_male',
+        'tango_duo',
+        'tennis_player',
+        'library',
+        'flowerdance',
+        'gymnast',
     ]
     
     existing_seqs = set(summary_df['Sequence'].values)
